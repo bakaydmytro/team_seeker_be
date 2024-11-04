@@ -34,4 +34,5 @@ jobs:
               "${{ github.event.pull_request.url }}"
           else
             echo "Branch name does not match the expected format."
+            exit 1  
           fi
