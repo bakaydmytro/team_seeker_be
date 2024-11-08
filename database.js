@@ -1,33 +1,50 @@
+require('dotenv').config(); // Load environment variables from .env file
 const mysql = require('mysql2/promise');
 const { Sequelize, DataTypes } = require('sequelize');
+const winston = require('winston');
 
-// Конфігурація бази даних
-const dbName = 'TeamSeeker';
-const dbUser = 'admin';
-const dbPassword = 'admin';
-const dbHost = 'localhost';
+// Database configuration using environment variables
+const dbName = process.env.DB_NAME;
+const dbUser = process.env.DB_USER;
+const dbPassword = process.env.DB_PASSWORD;
+const dbHost = process.env.DB_HOST;
 
-// Функція для створення бази даних, якщо її не існує
+// Logger configuration
+const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.printf(({ timestamp, level, message }) => {
+            return `${timestamp} ${level}: ${message}`;
+        })
+    ),
+    transports: [
+        new winston.transports.Console(),
+        new winston.transports.File({ filename: 'app.log' })
+    ]
+});
+
+// Function to create the database if it does not exist
 async function createDatabase() {
     const connection = await mysql.createConnection({ host: dbHost, user: dbUser, password: dbPassword });
     await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
     await connection.end();
 }
 
-// Головна функція для підключення та синхронізації
+// Main function for connecting and synchronizing
 (async () => {
     try {
-        // Створюємо базу даних
+        // Create the database
         await createDatabase();
-        console.log(`Database ${dbName} created or already exists.`);
+        logger.info(`Database ${dbName} created or already exists.`);
 
-        // Підключаємося до бази даних за допомогою Sequelize
+        // Connect to the database with Sequelize
         const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
             host: dbHost,
             dialect: 'mysql',
         });
 
-        // Визначення моделі Role
+        // Define the Role model
         const Role = sequelize.define('Role', {
             name: {
                 type: DataTypes.STRING,
@@ -38,7 +55,7 @@ async function createDatabase() {
             timestamps: false,
         });
 
-        // Визначення моделі User
+        // Define the User model
         const User = sequelize.define('User', {
             username: {
                 type: DataTypes.STRING,
@@ -61,40 +78,43 @@ async function createDatabase() {
             timestamps: false,
         });
 
-        // Встановлюємо зв’язок: User належить до Role
+        // Set up relationship: User belongs to Role
         User.belongsTo(Role, { foreignKey: 'role_id' });
 
-        // Синхронізація моделей з базою даних
+        // Synchronize models with the database
         await sequelize.sync({ alter: true });
-        console.log('All models were synchronized successfully.');
-        // Автоматичне створення ролей: admin та user
-        const adminRole = await Role.findOrCreate({
-            where: { name: 'admin' },
+        logger.info('All models were synchronized successfully.');
+
+        // Automatically create roles: admin and user
+        const [adminRole] = await Role.findOrCreate({ where: { name: 'admin' } });
+        const [userRole] = await Role.findOrCreate({ where: { name: 'user' } });
+
+        // Add users with associated roles
+        await User.findOrCreate({
+            where: { email: 'admin@example.com' },
+            defaults: {
+                username: 'admin',
+                birthday: new Date('1990-01-01'),
+                password: 'admin',
+                role_id: adminRole.id,
+            }
         });
-        const userRole = await Role.findOrCreate({
-            where: { name: 'user' },
+
+        await User.findOrCreate({
+            where: {email: 'user@example.com'},
+            defaults:{
+                username: 'user',
+                email: 'user@example.com',
+                birthday: new Date('1995-01-01'),
+                password: 'user',
+                role_id: userRole.id,
+            }
         });
 
-    // Додавання користувачів 
-    const adminUser = await User.create({
-        username: 'admin',
-        email: 'admin@example.com',
-        birthday: new Date('1990-01-01'),
-        password: 'admin',
-        role_id: adminRole[0].id,  // Використовуємо id ролі admin
-    });
+        logger.info('Admin and user roles created and users added successfully.');
 
-    const regularUser = await User.create({
-        username: 'user',
-        email: 'user@example.com',
-        birthday: new Date('1995-01-01'),
-        password: 'user',
-        role_id: userRole[0].id,  // Використовуємо id ролі user
-    });
-
-    console.log('Admin and user roles created and users added successfully.');
-
-} catch (error) {
-    console.error('Error during database creation or synchronization:', error);
-}
+    } catch (error) {
+        logger.error('Error during database creation or synchronization:', error);
+    }
+    
 })();
