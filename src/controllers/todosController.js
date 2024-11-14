@@ -2,17 +2,18 @@
 
 const Todo = require('../models/todoModel');
 const { User } = require('../config/db'); 
-const user = await User.findById(req.user.id);
+// const user = await User.findById(req.user.id); 
+//TODO: fix this you can call await function in async method
 
-if (!user) {
-  res.status(401);
-  throw new Error("User not found");
-}
+// if (!user) {
+//   res.status(401);
+//   throw new Error("User not found");
+// }
 
-if (todo.user.toString() !== user.id) {
-  res.status(401);
-  throw new Error("User not authorized");
-}
+// if (todo.user.toString() !== user.id) {
+//   res.status(401);
+//   throw new Error("User not authorized");
+// }
 
 //creating a new Todo
 const setTodo = asyncHanlder(async (req, res) => {

@@ -1,5 +1,3 @@
-//config/db.js
-
 require('dotenv').config(); // Load environment variables from .env file
 const mysql = require('mysql2/promise');
 const { Sequelize, DataTypes } = require('sequelize');
