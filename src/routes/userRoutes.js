@@ -8,8 +8,8 @@ const {
 } = require("../controllers/userController");
 const { protect } = require("../middleware/authMiddleware");
 
-router.post("/", registerUser);
-router.post("/login", loginUser);
-router.get("/me", protect, getLoggedInUser);
+router.post("/", registerUser); // shpuld be sign up /api/signup
+router.post("/login", loginUser); // /api/login
+router.get("/me", protect, getLoggedInUser); //api/user/{id}
 
 module.exports = router;
