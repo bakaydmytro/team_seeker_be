@@ -1,0 +1,38 @@
+name: Link issue
+
+on:
+  pull_request:
+    types: [opened, edited]
+
+jobs:
+  update-description:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Update PR description
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          branch_name="${{ github.head_ref }}"
+          if [[ "$branch_name" =~ ^(feat|bugfix)/([0-9]+)-(.*) ]]; then
+            issue_id="${BASH_REMATCH[2]}"
+            pr_description="This pull request is related to issue #${issue_id}."
+            pr_url="${{ github.event.pull_request.html_url }}"
+            pr_description+="\n\nRelated PR: [${pr_url}](${pr_url})"
+
+            echo "Updating pull request description with related issue #${issue_id}."
+            curl -X PATCH \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              -d "{\"body\": \"${pr_description}\"}" \
+              "${{ github.event.pull_request.url }}"
+          else
+            echo "Branch name does not match the expected format."
+            exit 1  
+          fi
