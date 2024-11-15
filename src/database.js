@@ -120,5 +120,3 @@ async function createDatabase() {
     }
     
 })();
-
-

@@ -1,0 +1,25 @@
+2024-11-14T23:41:03.976Z error: Error during database creation or synchronization: Access denied for user ''@'localhost' (using password: YES)
+2024-11-14T23:42:24.482Z error: Error during database creation or synchronization: Access denied for user ''@'localhost' (using password: YES)
+2024-11-14T23:43:04.330Z error: Error during database creation or synchronization: Access denied for user ''@'localhost' (using password: YES)
+2024-11-14T23:45:11.537Z error: Error during database creation or synchronization: Access denied for user ''@'localhost' (using password: YES)
+2024-11-14T23:48:00.499Z error: Error during database creation or synchronization: Access denied for user ''@'localhost' (using password: YES)
+2024-11-14T23:49:25.076Z error: Error during database creation or synchronization: Access denied for user ''@'localhost' (using password: YES)
+2024-11-14T23:53:06.373Z error: Error during database creation or synchronization: Access denied for user ''@'localhost' (using password: YES)
+2024-11-14T23:55:26.730Z error: Error during database creation or synchronization: Access denied for user ''@'localhost' (using password: YES)
+2024-11-14T23:59:22.035Z error: Error during database creation or synchronization: Access denied for user ''@'localhost' (using password: YES)
+2024-11-15T00:00:44.848Z error: Error during database creation or synchronization: Access denied for user ''@'localhost' (using password: YES)
+2024-11-15T00:00:59.070Z error: Error during database creation or synchronization: Access denied for user ''@'localhost' (using password: YES)
+2024-11-15T00:01:48.974Z error: Error during database creation or synchronization: Access denied for user ''@'localhost' (using password: YES)
+2024-11-15T00:01:59.207Z error: Error during database creation or synchronization: Access denied for user ''@'localhost' (using password: YES)
+2024-11-15T00:02:40.463Z error: Error during database creation or synchronization: Access denied for user ''@'localhost' (using password: YES)
+2024-11-15T00:13:09.731Z error: Error during database creation or synchronization: Access denied for user ''@'localhost' (using password: YES)
+2024-11-15T00:24:11.572Z error: Error during database creation or synchronization: Access denied for user ''@'localhost' (using password: YES)
+2024-11-15T00:25:18.901Z info: Database nazardb created or already exists.
+2024-11-15T00:25:19.200Z info: All models were synchronized successfully.
+2024-11-15T00:25:19.213Z info: Admin and user roles created and users added successfully.
+2024-11-15T00:27:39.717Z info: Database nazardb created or already exists.
+2024-11-15T00:27:39.977Z info: All models were synchronized successfully.
+2024-11-15T00:27:39.988Z info: Admin and user roles created and users added successfully.
+2024-11-15T15:26:38.135Z info: Database nazardb created or already exists.
+2024-11-15T15:26:38.492Z info: All models were synchronized successfully.
+2024-11-15T15:26:38.506Z info: Admin and user roles created and users added successfully.
