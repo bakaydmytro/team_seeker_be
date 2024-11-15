@@ -8,7 +8,7 @@ const { logger } = require('../config/db');
 
 async function updateUser(req, res) {
     const { user_id } = req.params;  // Get user_id from the URL params
-    const { username, email, password } = req.body;  // Get user data from the request body
+    const { username, email, password, birthday } = req.body;  // Get user data from the request body
   
     try {
       // Find the user by ID
@@ -25,8 +25,9 @@ async function updateUser(req, res) {
       }
   
       // Update other fields
-      user.username = username || user.username;  // Update username if provided
-      user.email = email || user.email;  // Update email if provided
+      user.username = username || user.username;  
+      user.email = email || user.email;  
+      user.birthday = birthday ? new Date(birthday) : user.birthday;
   
       // Save the updated user data to the database
       await user.save();
