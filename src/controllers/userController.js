@@ -11,11 +11,14 @@ const generateToken = (id) => {
 const registerUser = asyncHandler(async (req, res) => {
   const { username, email, birthday, password } = req.body;
 
-  if (!username || !email || birthday || !password) {
+  if (!username || !email || !birthday || !password) {
     res.status(400);
     throw new Error("Please add all fields");
   }
-  const userExists = await User.findOne({ email });
+  const userExists = await User.findOne({
+    where: { email }
+  });
+
   if (userExists) {
     res.status(400);
     throw new Error("User already exists");
@@ -52,7 +55,7 @@ const loginUser = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("Please add all fields");
   }
-  const user = await User.findOne({ email });
+  const user = await User.findOne({where: { email }});
 
   if (user && (await bcrypt.compare(password, user.password))) {
     res.json({

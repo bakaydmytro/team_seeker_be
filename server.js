@@ -3,6 +3,14 @@ const app = express();
 const port = process.env.PORT || 5001;
 const { errorHandler } = require("./src/middleware/errorMiddleware");
 const { sequelize } = require("./models");
+const cors = require("cors");
+
+const  corsOptions = {
+  credentials:true,
+  origin:['http://localhost:3000']
+}
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

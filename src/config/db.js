@@ -78,8 +78,6 @@ async function createDatabase() {
             timestamps: false,
         });
 
-        module.exports = User;
-
         // Set up relationship: User belongs to Role
         User.belongsTo(Role, { foreignKey: 'role_id' });
 
