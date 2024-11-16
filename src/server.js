@@ -1,16 +1,32 @@
-require('dotenv').config();
-const express = require('express');
-const bodyParser = require('body-parser');
-const userRoutes = require('./routes/userRoutes');
-
+const express = require("express");
 const app = express();
-app.use(bodyParser.json()); // Middleware для обробки JSON запитів
+const port = process.env.PORT || 5001;
+const { errorHandler } = require("./src/middleware/errorMiddleware");
+const { sequelize } = require("./models");
+const cors = require("cors");
 
-// Маршрути
-app.use('/api/users', userRoutes);
+const  corsOptions = {
+  credentials:true,
+  origin:['http://localhost:3000']
+}
 
-// Запуск сервера
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+app.use(cors(corsOptions));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+app.use("/api/users", require("./src/routes/userRoutes"));
+
+app.use(errorHandler);
+
+sequelize
+  .authenticate()
+  .then(() => {
+    console.log("Database connected successfully.");
+    app.listen(port, () => {
+      console.log(`Server started on port ${port}`);
+    });
+  })
+  .catch((err) => {
+    console.error("Error connecting to the database:", err);
+  });
