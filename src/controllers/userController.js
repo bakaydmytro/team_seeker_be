@@ -1,41 +1,96 @@
-const db = require('../database');
-const jwt = require('jsonwebtoken');
+//controllers/userController.js
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const asyncHandler = require("express-async-handler");
+const User = require("../../models").User;
 
-// Функція для генерації токена
-function generateToken(userId) {
-    return jwt.sign(
-        { id: userId }, 
-        process.env.JWT_SECRET || 'your_secret_key', 
-        { expiresIn: '1h' }
-    );
-}
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
+};
 
-// Функція реєстрації
-function registerUser(req, res) {
-    const { firstName, secondName, email, age, password } = req.body;
+const registerUser = asyncHandler(async (req, res) => {
+  const { username, email, birthday, password } = req.body;
 
-    const checkEmailQuery = 'SELECT * FROM users WHERE email = ?';
-    db.query(checkEmailQuery, [email], (err, results) => {
-        if (err) throw err;
+  if (!username || !email || !birthday || !password) {
+    res.status(400);
+    throw new Error("Please add all fields");
+  }
+  const userExists = await User.findOne({
+    where: { email }
+  });
 
-        if (results.length > 0) {
-            res.status(400).json({ error: 'Email is already registered' });
-        } else {
-            const insertUserQuery = 'INSERT INTO users (firstName, secondName, email, age, password) VALUES (?, ?, ?, ?, ?)';
-            db.query(insertUserQuery, [firstName, secondName, email, age, password], (err, result) => {
-                if (err) throw err;
+  if (userExists) {
+    res.status(400);
+    throw new Error("User already exists");
+  }
+  
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
 
-                const userId = result.insertId; // отримуємо ID користувача
-                const token = generateToken(userId); // генеруємо токен з ID користувача
-                res.status(200).json({
-                    message: 'User registered successfully',
-                    userId: userId,  // Додаємо userId до відповіді
-                    token: token
-                });
-            });
-        }
+  const user = await User.create({
+    username,
+    email,
+    birthday,
+    password: hashedPassword,
+  });
+
+  if (user) {
+    res.status(201).json({
+      _id: user.id,
+      name: user.username,
+      email: user.email,
+      birthday: user.birthday,
+      token: generateToken(user._id),
     });
-}
+  } else {
+    res.status(400);
+    throw new Error("Invalid user data");
+  }
+});
+
+const loginUser = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    res.status(400);
+    throw new Error("Please add all fields");
+  }
+  const user = await User.findOne({where: { email }});
+
+  if (user && (await bcrypt.compare(password, user.password))) {
+    res.json({
+      _id: user.id,
+      name: user.username,
+      email: user.email,
+      birthday: user.birthday,
+      token: generateToken(user._id),
+    });
+  } else {
+    res.status(400);
+    throw new Error("Invalid credentials");
+  }
+});
 
 
-module.exports = { registerUser };
+const getLoggedInUser = asyncHandler(async (req, res) => {
+  const { _id, username, email, birthday } = await User.findById(req.user.id);
+  res.status(200).json({
+    id: _id,
+    username,
+    email,
+    birthday,
+  });
+});
+
+
+
+
+module.exports = {
+  registerUser,
+  loginUser,
+  getLoggedInUser,
+};
+
+
+
+
