@@ -1,15 +1,13 @@
-require('dotenv').config(); // Load environment variables from .env file
+require('dotenv').config();
 const mysql = require('mysql2/promise');
 const { Sequelize, DataTypes } = require('sequelize');
 const winston = require('winston');
 
-// Database configuration using environment variables
-const dbName = process.env.DB_DATABASE;
-const dbUser = process.env.DB_USERNAME;
+const dbName = process.env.DB_NAME;
+const dbUser = process.env.DB_USER;
 const dbPassword = process.env.DB_PASSWORD;
 const dbHost = process.env.DB_HOST;
 
-// Logger configuration
 const logger = winston.createLogger({
     level: 'info',
     format: winston.format.combine(
@@ -24,7 +22,6 @@ const logger = winston.createLogger({
     ]
 });
 
-// Function to create the database if it does not exist
 async function createDatabase() {
     const connection = await mysql.createConnection({ host: dbHost, user: dbUser, password: dbPassword });
     await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
@@ -77,8 +74,6 @@ async function createDatabase() {
             tableName: 'user',
             timestamps: false,
         });
-
-        module.exports = User;
 
         // Set up relationship: User belongs to Role
         User.belongsTo(Role, { foreignKey: 'role_id' });
