@@ -1,8 +1,18 @@
+//routes/userRoutes
 const express = require("express");
-const { updateUser } = require('../controllers/userController');
 const router = express.Router();
+const {
+  registerUser,
+  loginUser,
+  getLoggedInUser,
+  updateUser
+} = require("../controllers/userController");
+const { protect } = require("../middleware/authMiddleware");
 
-router.put("/:id", updateUser);
+router.post("/signup", registerUser); // should be sign up /api/signup
+router.post("/login", loginUser); // /api/login
+router.get("/me", protect, getLoggedInUser); //api/user/{id}
+router.put("/:id", updateUser); 
 
-module.exports =  router;
+module.exports = router;
 

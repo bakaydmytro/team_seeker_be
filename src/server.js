@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const port = process.env.PORT || 5001;
 const { sequelize } = require("../models");
+const { errorHandler } = require("./middleware/errorMiddleware");
 const cors = require("cors");
 
 const  corsOptions = {
@@ -14,7 +15,9 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+
 app.use("/api/users", require("./routes/userRoutes"));
+app.use(errorHandler);
 
 sequelize
   .authenticate()
