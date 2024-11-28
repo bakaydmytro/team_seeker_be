@@ -3,6 +3,9 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
 const User = require("../../models").User;
+const { Op } = require("sequelize");
+const escapeWildcards = (input) => input.replace(/[%_]/g, "\\$&"); //To prevent SQL-injections
+
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
@@ -84,10 +87,9 @@ const getLoggedInUser = asyncHandler(async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    const { id } = req.params; // Extract user ID from URL
-    const { username, email, birthday, password } = req.body; // Extract fields to update
+    const { id } = req.params; 
+    const { username, email, birthday, password } = req.body; 
 
-    // Find the user by ID
     const user = await User.findByPk(id);
 
     if (!user) {
@@ -97,7 +99,7 @@ const updateUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Update the user fields
+    
     const updatedUser = await user.update({
       username,
       email,
@@ -112,11 +114,61 @@ const updateUser = async (req, res) => {
   }
 };
 
+
+const searchUsers = async (req, res) => {
+  try {
+    const { query, id, page = 1, limit = 10 } = req.query;
+
+
+    if (!query || typeof query !== "string" || query.length > 100) {
+      return res.status(400).json({ error: "Invalid query parameter." });
+    }
+
+    const safeQuery = escapeWildcards(query);
+
+    const offset = (page - 1) * limit;
+
+    const where = {};
+    if (query) where.username = { [Op.like]: `${safeQuery}%` };
+    if (id) where.id = id;
+
+
+    const users = await User.findAndCountAll({
+      where,
+      attributes: ["id", "username", "email", "birthday"],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+    });
+
+    if (users.rows.length === 0) {
+      return res.status(404).json({
+        message: "No users found matching the given criteria.",
+        criteria: { query, id },
+      });
+    }
+
+    res.status(200).json({
+      metadata: {
+        query,
+        caseSensitive: false,
+        totalResults: users.count,
+        totalPages: Math.ceil(users.count / limit),
+        currentPage: parseInt(page),
+      },
+      data: users.rows,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Something went wrong", details: err.message });
+  }
+};
+
+
 module.exports = {
   registerUser,
   loginUser,
   getLoggedInUser,
-  updateUser
+  updateUser,
+  searchUsers
 };
 
 
