@@ -1,9 +1,12 @@
+require('dotenv').config();
 const express = require("express");
 const app = express();
-const port = process.env.PORT || 5001;
+const session = require ("express-session");
+const port = process.env.PORT || 5000;
 const { errorHandler } = require("./src/middleware/errorMiddleware");
 const { sequelize } = require("./models");
 const cors = require("cors");
+
 
 const  corsOptions = {
   credentials:true,
@@ -11,12 +14,18 @@ const  corsOptions = {
 }
 
 app.use(cors(corsOptions));
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-app.use("/api/users", require("./src/routes/userRoutes"));
 
+app.use(session({
+secret: process.env.SECRET_KEY,
+resave: false,
+saveUninitialized: false,
+}));
+
+
+app.use("/api/users", require("./src/routes/userRoutes"));
 app.use(errorHandler);
 
 sequelize

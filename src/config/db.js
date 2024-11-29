@@ -4,7 +4,7 @@ const { Sequelize, DataTypes } = require('sequelize');
 const winston = require('winston');
 
 // Database configuration using environment variables
-const dbName = process.env.DB_NAME;
+const dbName = process.env.DB_DATABASE;
 const dbUser = process.env.DB_USER;
 const dbPassword = process.env.DB_PASSWORD;
 const dbHost = process.env.DB_HOST;
@@ -26,7 +26,7 @@ const logger = winston.createLogger({
 
 // Function to create the database if it does not exist
 async function createDatabase() {
-    const connection = await mysql.createConnection({ host: dbHost, user: dbUser, password: dbPassword });
+    const connection = await mysql.createConnection({ host: dbHost, user: dbUser, password: dbPassword});
     await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
     await connection.end();
 }
@@ -72,6 +72,19 @@ async function createDatabase() {
             password: {
                 type: DataTypes.STRING,
                 allowNull: false,
+            },
+            steamid:{
+                type: DataTypes.STRING,
+                unique: true,
+            },
+            avatar_url: {
+                type: DataTypes.STRING,
+            },
+            profile_url: {
+                type: DataTypes.STRING,
+            },
+            game_now_playing: {
+                type: DataTypes.STRING,
             },
         }, {
             tableName: 'user',
