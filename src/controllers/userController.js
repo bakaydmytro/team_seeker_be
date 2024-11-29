@@ -2,7 +2,8 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
-const User = require("../../models").User;
+const axios = require('axios');
+const { Game, User } = require('../../models');
 const SteamAuth = require('node-steam-openid');
 
 const steam = new SteamAuth({
@@ -185,6 +186,63 @@ const steamRedirect = asyncHandler(async (req, res) => {
   }
 });
 
+const allowedGames = [730, 570, 440]; // CS2, Dota 2, Team Fortress 2
+
+const getRecentlyPlayedGames = async (req, res) => {
+  try {
+    const { steamid } = req.body; 
+    const apiKey = process.env.STEAM_API_KEY;
+
+    const url = `http://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v0001/?key=${apiKey}&steamid=${steamid}&format=json`;
+
+    const response = await axios.get(url);
+    const { games, total_count } = response.data.response;
+
+    if (!games || total_count === 0) {
+      return res.status(404).json({ message: "No recently played games found" });
+    }
+
+    const user = await User.findOne({ where: { steamid } });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    
+    const filteredGames = games.filter((game) =>
+      allowedGames.includes(game.appid)
+    );
+
+    if (filteredGames.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No allowed games found in recently played games" });
+    }
+
+    
+    const gameRecords = filteredGames.map((game) => ({
+      appid: game.appid,
+      name: game.name,
+      playtime_2weeks: game.playtime_2weeks || null,
+      playtime_forever: game.playtime_forever,
+      img_icon_url: game.img_icon_url,
+      img_logo_url: game.img_logo_url,
+      user_id: user.id,
+    }));
+
+   
+    await Game.bulkCreate(gameRecords, { ignoreDuplicates: true });
+
+    res
+      .status(200)
+      .json({ message: "Filtered games saved successfully", games: filteredGames });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to fetch games", error });
+  }
+};
+
+
 
 
 module.exports = {
@@ -193,6 +251,7 @@ module.exports = {
   getLoggedInUser,
   steamLogin,
   steamRedirect,
+  getRecentlyPlayedGames,
 };
 
 

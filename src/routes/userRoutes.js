@@ -7,6 +7,7 @@ const {
   getLoggedInUser,
   steamLogin,
   steamRedirect,
+  getRecentlyPlayedGames,
 } = require("../controllers/userController");
 const { protect, } = require("../middleware/authMiddleware");
 
@@ -16,6 +17,7 @@ router.post("/login", loginUser);
 router.get("/me", protect, getLoggedInUser); 
 router.get("/steam", steamLogin);
 router.get('/steam/authenticate', steamRedirect);
+router.post('/game-history', getRecentlyPlayedGames);
 
 
 module.exports = router;
