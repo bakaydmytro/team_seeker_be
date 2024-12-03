@@ -21,3 +21,4 @@ router.post('/game-history', getRecentlyPlayedGames);
 
 
 module.exports = router;
+
