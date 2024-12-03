@@ -1,10 +1,10 @@
 const express = require("express");
 const app = express();
 const port = process.env.PORT || 5000;
-const { sequelize } = require("./models");
 const { errorHandler } = require("./src/middleware/errorMiddleware");
+const { sequelize } = require("./models");
 const cors = require("cors");
-const session = require("express-session")
+const session = require("express-session");
 
 const  corsOptions = {
   credentials:true,
@@ -16,8 +16,8 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-
 app.use("/api/users", require("./src/routes/userRoutes"));
+
 app.use(errorHandler);
 
 sequelize
