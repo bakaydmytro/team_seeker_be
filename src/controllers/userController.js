@@ -43,7 +43,7 @@ const registerUser = asyncHandler(async (req, res) => {
       name: user.username,
       email: user.email,
       birthday: user.birthday,
-      token: generateToken(user._id),
+      token: generateToken(user.id),
     });
   } else {
     res.status(400);
@@ -66,7 +66,7 @@ const loginUser = asyncHandler(async (req, res) => {
       name: user.username,
       email: user.email,
       birthday: user.birthday,
-      token: generateToken(user._id),
+      token: generateToken(user.id),
     });
   } else {
     res.status(400);
@@ -76,12 +76,11 @@ const loginUser = asyncHandler(async (req, res) => {
 
 
 const getLoggedInUser = asyncHandler(async (req, res) => {
-  const { _id, username, email, birthday } = await User.findById(req.user.id);
   res.status(200).json({
-    id: _id,
-    username,
-    email,
-    birthday,
+    id: req.user.id,
+    username: req.user.username,
+    email: req.user.email,
+    birthday: req.user.birthday,
   });
 });
 
@@ -115,10 +114,11 @@ const updateUser = async (req, res) => {
 };
 
 
-const searchUsers = async (req, res) => {
+const searchUsers = asyncHandler(async (req, res) => {
   try {
     const { query, id, page = 1, limit = 10 } = req.query;
 
+    const loggedInUserId = req.user.id; 
 
     if (!query || typeof query !== "string" || query.length > 100) {
       return res.status(400).json({ error: "Invalid query parameter." });
@@ -128,9 +128,10 @@ const searchUsers = async (req, res) => {
 
     const offset = (page - 1) * limit;
 
-    const where = {};
-    if (query) where.username = { [Op.like]: `${safeQuery}%` };
-    if (id) where.id = id;
+    const where = {
+      username: { [Op.like]: `${safeQuery}%` }, 
+      id: { [Op.ne]: loggedInUserId }, 
+    };
 
 
     const users = await User.findAndCountAll({
@@ -160,7 +161,7 @@ const searchUsers = async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: "Something went wrong", details: err.message });
   }
-};
+});
 
 
 module.exports = {
