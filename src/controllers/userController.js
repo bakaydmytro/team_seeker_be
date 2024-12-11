@@ -126,7 +126,13 @@ const searchUsers = asyncHandler(async (req, res) => {
 
     const safeQuery = escapeWildcards(query);
 
-    const offset = (page - 1) * limit;
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    if (isNaN(pageNum) || pageNum <= 0 || isNaN(limitNum) || limitNum <= 0 || limitNum > 100) {
+      return res.status(400).json({ error: "Invalid pagination parameters." });
+    }
+
+    const offset = (pageNum - 1) * limitNum;
 
     const where = {
       username: { [Op.like]: `${safeQuery}%` }, 
@@ -136,9 +142,9 @@ const searchUsers = asyncHandler(async (req, res) => {
 
     const users = await User.findAndCountAll({
       where,
-      attributes: ["id", "username", "email", "birthday"],
-      limit: parseInt(limit),
-      offset: parseInt(offset),
+      attributes: ["id", "username"], // Limit exposed fields
+      limit: limitNum,
+      offset,
     });
 
     if (users.rows.length === 0) {
