@@ -11,6 +11,15 @@ const  corsOptions = {
   origin:['http://localhost:3000']
 }
 
+app.use(
+  session({
+    secret: process.env.SECRET_KEY || 'secret_key', 
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }, 
+  })
+);
+
 app.use(cors(corsOptions));
 
 app.use(express.json());

@@ -164,19 +164,9 @@ const steamRedirect = asyncHandler(async (req, res) => {
     const token = generateToken(user.id);
     req.session.username = user.username;
 
-    res.status(200).json({
-      message: "Authentication successful",
-      user: {
-        _id: user.id,
-        username: user.username,
-        steamid: user.steamid,
-        profile_url: user.profile_url,
-        avatar_url: user.avatar_url,
-        game_now_playing: user.game_now_playing,
-        token: token,
-        redirectUrl: "http://localhost:3000/dashboard",
-      },
-    });
+    const redirectUrl = `http://localhost:3000/dashboard?token=${token}`;
+    res.redirect(redirectUrl);
+
   } catch (error) {
     console.error("Error during Steam authentication:", error);
 
