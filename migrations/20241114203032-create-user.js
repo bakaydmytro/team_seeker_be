@@ -11,14 +11,30 @@ module.exports = {
       },
       username: {
         type: Sequelize.STRING,
+        allowNull: false,
       },
       email: {
         type: Sequelize.STRING,
+        unique: true,
       },
       birthday: {
         type: Sequelize.DATE,
       },
       password: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      steamid: {
+        type: Sequelize.STRING,
+        unique: true,
+      },
+      avatar_url: {
+        type: Sequelize.STRING,
+      },
+      profile_url: {
+        type: Sequelize.STRING,
+      },
+      game_now_playing: {
         type: Sequelize.STRING,
       },
       role_id: {
