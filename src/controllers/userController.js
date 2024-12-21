@@ -45,11 +45,11 @@ const registerUser = asyncHandler(async (req, res) => {
   if (user) {
     req.session.userId = user.id;
     res.status(201).json({
-      _id: user.id,
+      id: user.id,
       name: user.username,
       email: user.email,
       birthday: user.birthday,
-      token: generateToken(user._id),
+      token: generateToken(user.id),
     });
   } else {
     res.status(400);
@@ -74,11 +74,11 @@ const loginUser = asyncHandler(async (req, res) => {
   if (user && (await bcrypt.compare(password, user.password))) {
     req.session.userId = user.id;
     res.json({
-      _id: user.id,
+      id: user.id,
       name: user.username,
       email: user.email,
       birthday: user.birthday,
-      token: generateToken(user._id),
+      token: generateToken(user.id),
     });
   } else {
     res.status(400);
@@ -88,23 +88,13 @@ const loginUser = asyncHandler(async (req, res) => {
 
 
 const getLoggedInUser = asyncHandler(async (req, res) => {
-  const userId = req.session.userId;
-
-  if (!userId) {
+  
+  if (!req.user) {
     res.status(401);
     throw new Error("Not authenticated");
   }
 
-  const user = await User.findByPk(userId, {
-    attributes: ["id", "username", "email", "birthday"],
-  });
-
-  if (!user) {
-    res.status(404);
-    throw new Error("User not found");
-  }
-
-  res.status(200).json(user);
+  res.status(200).json(req.user);
 });
 
 
