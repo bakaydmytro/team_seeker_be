@@ -1,4 +1,3 @@
-//controllers/userController.js
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
@@ -6,7 +5,7 @@ const axios = require('axios');
 const { Game, User } = require('../../models');
 const SteamAuth = require('node-steam-openid');
 const { Op } = require("sequelize");
-const escapeWildcards = (input) => input.replace(/[%_]/g, "\\$&"); //To prevent SQL-injections
+const escapeWildcards = (input) => input.replace(/[%_]/g, "\\$&"); 
 
 const steam = new SteamAuth({
   realm: 'http://localhost:5000', 
@@ -47,7 +46,7 @@ const registerUser = asyncHandler(async (req, res) => {
   if (user) {
     req.session.userId = user.id;
     res.status(201).json({
-      _id: user.id,
+      id: user.id,
       name: user.username,
       email: user.email,
       birthday: user.birthday,
@@ -76,7 +75,7 @@ const loginUser = asyncHandler(async (req, res) => {
   if (user && (await bcrypt.compare(password, user.password))) {
     req.session.userId = user.id;
     res.json({
-      _id: user.id,
+      id: user.id,
       name: user.username,
       email: user.email,
       birthday: user.birthday,
@@ -89,13 +88,15 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const getLoggedInUser = asyncHandler(async (req, res) => {
-  res.status(200).json({
-    id: req.user.id,
-    username: req.user.username,
-    email: req.user.email,
-    birthday: req.user.birthday,
-  });
+  
+  if (!req.user) {
+    res.status(401);
+    throw new Error("Not authenticated");
+  }
+
+  res.status(200).json(req.user);
 });
+
 
 const updateUser = async (req, res) => {
   try {
