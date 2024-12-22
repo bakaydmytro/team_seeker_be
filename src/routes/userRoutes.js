@@ -5,9 +5,11 @@ const {
   registerUser,
   loginUser,
   getLoggedInUser,
+  updateUser,
   steamLogin,
   steamRedirect,
   getRecentlyPlayedGames,
+  searchUsers,
 } = require("../controllers/userController");
 const { protect } = require("../middleware/authMiddleware");
 
@@ -137,6 +139,9 @@ router.get('/steam/authenticate', steamRedirect);
  *         description: No game history found
  */
 router.post('/game-history', getRecentlyPlayedGames);
+
+router.put("/:id", updateUser);  
+router.get("/search", protect, searchUsers); 
 
 module.exports = router;
 
