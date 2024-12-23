@@ -221,9 +221,9 @@ const getRecentlyPlayedGames = asyncHandler(async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const filteredGames = games.filter((game) =>
-      allowedGames.includes(game.appid)
-    );
+      const filteredGames = games.filter((game) =>
+        allowedGames.includes(game.appid)
+      );
 
       if (filteredGames.length > 0) {
         
@@ -246,7 +246,7 @@ const getRecentlyPlayedGames = asyncHandler(async (req, res) => {
       }
     
 
-    
+
     const allTimeGames = await Game.findAll({
       where: { user_id: req.user.id },
     });
@@ -273,6 +273,7 @@ const getRecentlyPlayedGames = asyncHandler(async (req, res) => {
     res.status(500).json({ message: "Failed to fetch games", error });
   }
 });
+
 
 
 const searchUsers = asyncHandler(async (req, res) => {
