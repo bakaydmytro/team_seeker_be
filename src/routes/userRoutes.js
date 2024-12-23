@@ -10,6 +10,7 @@ const {
   getRecentlyPlayedGames,
 } = require("../controllers/userController");
 const { protect } = require("../middleware/authMiddleware");
+const { steamProtect } = require("../middleware/steamAuth");
 
 /**
  * @swagger
@@ -117,28 +118,23 @@ router.get('/steam/authenticate', steamRedirect);
 /**
  * @swagger
  * /api/users/game-history:
- *   post:
+ *   get:
  *     summary: Retrieve user's game history
  *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               steamid:
- *                 type: string
- *                 description: User's Steam ID
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Game history retrieved successfully
  *       404:
  *         description: No game history found
+ *       401:
+ *         description: Unauthorized
  */
-router.post('/game-history', getRecentlyPlayedGames);
+router.get('/game-history', steamProtect, getRecentlyPlayedGames);
 
 module.exports = router;
+
 
 
 
