@@ -5,9 +5,11 @@ const {
   registerUser,
   loginUser,
   getLoggedInUser,
+  updateUser,
   steamLogin,
   steamRedirect,
   getRecentlyPlayedGames,
+  searchUsers,
 } = require("../controllers/userController");
 const { protect } = require("../middleware/authMiddleware");
 const { steamProtect } = require("../middleware/steamAuth");
@@ -132,6 +134,9 @@ router.get('/steam/authenticate', steamRedirect);
  *         description: Unauthorized
  */
 router.get('/game-history', steamProtect, getRecentlyPlayedGames);
+
+router.put("/:id", updateUser);  
+router.get("/search", protect, searchUsers); 
 
 module.exports = router;
 
