@@ -138,6 +138,9 @@ router.get('/game-history', steamProtect, getRecentlyPlayedGames);
 router.put("/:id", updateUser);  
 router.get("/search", protect, searchUsers); 
 
+router.put("/:id", updateUser);  
+router.get("/search", protect, searchUsers); 
+
 module.exports = router;
 
 

@@ -274,8 +274,6 @@ const getRecentlyPlayedGames = asyncHandler(async (req, res) => {
   }
 });
 
-
-
 const searchUsers = asyncHandler(async (req, res) => {
   try {
     const { query, id, page = 1, limit = 10 } = req.query;
