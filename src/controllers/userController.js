@@ -183,8 +183,8 @@ const steamRedirect = asyncHandler(async (req, res) => {
     const token = generateToken(user.id);
     req.session.username = user.username;
 
-    const redirectUrl = `http://localhost:3000/dashboard?token=${token}`;
-    res.redirect(redirectUrl);
+     const redirectUrl = `http://localhost:3000/dashboard?token=${token}`;
+     res.redirect(redirectUrl);
 
   } catch (error) {
     console.error("Error during Steam authentication:", error);
@@ -197,13 +197,17 @@ const steamRedirect = asyncHandler(async (req, res) => {
 
 const allowedGames = [730, 570, 440]; // CS2, Dota 2, Team Fortress 2
 
-const getRecentlyPlayedGames = async (req, res) => {
+const getRecentlyPlayedGames = asyncHandler(async (req, res) => {
   try {
-    const { steamid } = req.body; 
+    const { steamid } = req.user;
     const apiKey = process.env.STEAM_API_KEY;
 
-    const url = `http://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v0001/?key=${apiKey}&steamid=${steamid}&format=json`;
+    if (!steamid) {
+      return res.status(400).json({ message: "SteamID not found for the user" });
+    }
 
+    
+    const url = `http://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v0001/?key=${apiKey}&steamid=${steamid}&format=json`;
     const response = await axios.get(url);
     const { games, total_count } = response.data.response;
 
@@ -217,38 +221,58 @@ const getRecentlyPlayedGames = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const filteredGames = games.filter((game) =>
-      allowedGames.includes(game.appid)
-    );
+      const filteredGames = games.filter((game) =>
+        allowedGames.includes(game.appid)
+      );
 
-    if (filteredGames.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No allowed games found in recently played games" });
+      if (filteredGames.length > 0) {
+        
+        const gameRecords = filteredGames.map((game) => ({
+          appid: game.appid,
+          name: game.name,
+          playtime_2weeks: game.playtime_2weeks || null,
+          playtime_forever: game.playtime_forever,
+          img_icon_url: game.img_icon_url,
+          img_logo_url: game.img_logo_url,
+          user_id: req.user.id,
+        }));
+
+        await Game.bulkCreate(gameRecords, { ignoreDuplicates: true });
+
+        
+        return res
+          .status(200)
+          .json({ message: "Recently played games saved successfully", games: filteredGames });
+      }
+    
+
+
+    const allTimeGames = await Game.findAll({
+      where: { user_id: req.user.id },
+    });
+
+    if (allTimeGames.length === 0) {
+      return res.status(404).json({ message: "No games found for this user" });
     }
 
-    
-    const gameRecords = filteredGames.map((game) => ({
+    const gamesWithoutrecentgames= allTimeGames.map((game) => ({
       appid: game.appid,
       name: game.name,
-      playtime_2weeks: game.playtime_2weeks || null,
       playtime_forever: game.playtime_forever,
       img_icon_url: game.img_icon_url,
       img_logo_url: game.img_logo_url,
-      user_id: user.id,
+      user_id: game.user_id,
     }));
 
-   
-    await Game.bulkCreate(gameRecords, { ignoreDuplicates: true });
-
-    res
-      .status(200)
-      .json({ message: "Filtered games saved successfully", games: filteredGames });
+    return res.status(200).json({
+      message: "No recently played games found. Returning all-time games.",
+      games: gamesWithoutrecentgames,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Failed to fetch games", error });
   }
-};
+});
 
 const searchUsers = asyncHandler(async (req, res) => {
   try {
