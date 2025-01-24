@@ -12,6 +12,7 @@ const {
   searchUsers,
 } = require("../controllers/userController");
 const { protect } = require("../middleware/authMiddleware");
+const { steamProtect } = require("../middleware/steamAuth");
 
 /**
  * @swagger
@@ -408,7 +409,10 @@ router.get('/steam/authenticate', steamRedirect);
  *                   type: string
  *                   example: Internal server error details.
  */
-router.post('/game-history', getRecentlyPlayedGames);
+router.get('/game-history', steamProtect, getRecentlyPlayedGames);
+
+router.put("/:id", updateUser);  
+router.get("/search", protect, searchUsers); 
 
 /**
  * @swagger
@@ -623,6 +627,7 @@ router.put("/:id", updateUser);
 router.get("/search", protect, searchUsers); 
 
 module.exports = router;
+
 
 
 
