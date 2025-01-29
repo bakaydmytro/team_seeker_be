@@ -8,7 +8,7 @@ module.exports = {
         id: 1,
         username: "John",
         email: "admin@example.com",
-        password: "admin", //need to be updated
+        password: "admin", 
         role_id: 1,
         createdAt: new Date(),
         updatedAt: new Date(),

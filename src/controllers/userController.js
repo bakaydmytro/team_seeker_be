@@ -109,20 +109,43 @@ const updateUser = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
+    if (email && email !== user.email) {
+      const existingUser = await User.findOne({ where: { email } });
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already in use" });
+      }
+    } else if (email === user.email) {
+      return res.status(400).json({ message: "You entered your current email" });
+    }
     
-    const updatedUser = await user.update({
-      username,
-      email,
-      birthday,
-      password: hashedPassword,
-    });
+    const updatedFields = {};
 
-    return res.status(200).json({ message: "User updated successfully", updatedUser });
+    if (username) updatedFields.username = username;
+    if (email) updatedFields.email = email;
+    if (birthday) updatedFields.birthday = birthday;
+    if (password) {
+      const isSamePassword = await bcrypt.compare(password, user.password);
+      if (isSamePassword) {
+        return res.status(400).json({ message: "New password cannot be the same as the old password" });
+      }
+      const salt = await bcrypt.genSalt(10);
+      updatedFields.password = await bcrypt.hash(password, salt);
+    }
+
+    if (Object.keys(updatedFields).length === 0) {
+      return res.status(400).json({ message: "No new changes to update" });
+    }
+    
+    await user.update(updatedFields);
+
+    const { password: _, ...safeUserData } = user.get({ plain: true });
+
+    return res.status(200).json({ 
+      message: "User updated successfully", 
+      user: safeUserData 
+    });
   } catch (error) {
-    console.error("Error in updateUser:", error.message);
+    console.error("Error in updateUser:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -314,13 +337,16 @@ const searchUsers = asyncHandler(async (req, res) => {
       });
     }
 
+    const totalPages = Math.ceil(users.count / limit);
     res.status(200).json({
       metadata: {
         query,
         caseSensitive: false,
-        totalResults: users.count,
-        totalPages: Math.ceil(users.count / limit),
+        totalResults: users.count, 
+        totalPages,
         currentPage: parseInt(page),
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
       },
       data: users.rows,
     });
