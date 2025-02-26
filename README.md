@@ -10,3 +10,17 @@
 
 Example how to create a model using npx sequelize:
 `npx sequelize-cli model:generate --name Role --attributes name:string`
+
+
+## Run app in Docker
+
+1. Set up .env based on `example_env` file 
+2. Build docker image:
+`docker build -t team-seeker-api .`
+3. Run docker image:
+`docker run -p 5000:5000 team-seeker-api`
+
+## Run docker-compose
+1. Set up .env based on `example_env` file 
+2. Run docker-compose:
+`docker-compose up --build`
