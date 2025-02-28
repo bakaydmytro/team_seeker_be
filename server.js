@@ -12,6 +12,8 @@ const { Server } = require("socket.io");
 const http = require("http");
 const { Op } = require("sequelize");
 const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const path = require("path");
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -34,7 +36,38 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/users", require("./src/routes/userRoutes"));
 app.use("/api/chats", require("./src/routes/chatRoutes"));
 app.use(errorHandler);
+app.get("/generate-json", async (req, res) => {
+  try {
+
+    const users = await User.findAll();
+    const usersJson = users.map(user => user.toJSON()); 
+    const filePath = path.join(__dirname, "users.json");
+
+    fs.writeFileSync(filePath, JSON.stringify(usersJson, null, 2), "utf-8");
+
+    res.download(filePath, "users.json", (err) => {
+      if (err) {
+        console.error("Error during file download:", err);
+        res.status(500).send("Unable to download file");
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Unable to get users");
+  }
+});
+app.get("/users", async (req, res) => {
+  try {
+    const users = await User.findAll(); 
+    const usersJson = users.map(user => user.toJSON()); 
+    res.json(usersJson); 
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Unable to get users");
+  }
+});
 swaggerDocs(app);
+
 
 io.use((socket, next) => {
   const token = socket.handshake.query.token; 
