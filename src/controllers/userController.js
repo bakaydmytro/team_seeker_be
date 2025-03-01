@@ -103,9 +103,14 @@ const updateUser = async (req, res) => {
     const { id } = req.params; 
     const { username, email, birthday, password } = req.body; 
 
-    const user = await User.findByPk(id);
+    const userId = req.user.id; 
+    const user = await User.findByPk(userId);
 
-    if (!user) {
+    if (userId !== parseInt(id)) {
+      return res.status(403).json({ message: 'Forbidden: Not allowed to update other users' });
+    }
+
+    if (!userId) {
       return res.status(404).json({ message: "User not found" });
     }
 
@@ -120,10 +125,12 @@ const updateUser = async (req, res) => {
     
     const updatedFields = {};
 
-    if (username) updatedFields.username = username;
-    if (email) updatedFields.email = email;
-    if (birthday) updatedFields.birthday = birthday;
+    if (username && username.trim()) updatedFields.username = username;
+    if (email && email.trim()) updatedFields.email = email;
+    if (birthday && birthday.trim()) updatedFields.birthday = birthday;
+
     if (password) {
+      
       const isSamePassword = await bcrypt.compare(password, user.password);
       if (isSamePassword) {
         return res.status(400).json({ message: "New password cannot be the same as the old password" });

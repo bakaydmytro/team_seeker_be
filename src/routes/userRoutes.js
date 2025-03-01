@@ -411,15 +411,14 @@ router.get('/steam/authenticate', steamRedirect);
  */
 router.get('/game-history', steamProtect, getRecentlyPlayedGames);
 
-router.put("/:id", updateUser);  
-router.get("/search", protect, searchUsers); 
-
 /**
  * @swagger
  * /api/users/{id}:
  *   put:
  *     summary: Update user information
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []  # Bearer token for authorization
  *     parameters:
  *       - name: id
  *         in: path
@@ -510,7 +509,7 @@ router.get("/search", protect, searchUsers);
  *                   type: string
  *                   example: Something went wrong
  */
-router.put("/:id", updateUser);
+router.put("/:id", protect, updateUser);
 
 /**
  * @swagger
