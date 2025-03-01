@@ -24,7 +24,9 @@ services:
       mysql:
         condition: service_healthy
     ports:
-      - "5000:5000"
+      - "5001:5001"
+    command: ["/bin/sh", "-c", "npm run db:reset && npm start"]
+
 
 volumes:
   mysql_data:

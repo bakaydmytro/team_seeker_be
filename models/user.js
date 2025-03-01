@@ -9,12 +9,13 @@ module.exports = (sequelize, DataTypes) => {
 
       User.belongsToMany(models.Chat, {
         through: {
-          model: models.Member,  
-          unique: false, 
+            model: models.Member,
+            unique: false,
         },
         foreignKey: 'user_id',
         otherKey: 'chat_id',
-      });
+    });
+    
 
     }
 

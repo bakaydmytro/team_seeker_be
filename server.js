@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5001;
 const { errorHandler } = require("./src/middleware/errorMiddleware");
 const { sequelize, User, Chat, Message } = require("./models");
 const cors = require("cors");
@@ -22,10 +22,10 @@ const io = new Server(server, {
 
 app.use(
   session({
-    secret: process.env.SECRET_KEY || 'secret_key', 
+    secret: process.env.SECRET_KEY || "secret_key",
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false }, 
+    cookie: { secure: false },
   })
 );
 
