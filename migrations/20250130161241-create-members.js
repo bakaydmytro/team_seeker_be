@@ -1,42 +1,42 @@
-'use strict';
+"use strict";
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Members', {
+    await queryInterface.createTable("Members", {
       chat_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Chats', 
-          key: 'id',
+          model: "Chats",
+          key: "id",
         },
-        onDelete: 'CASCADE', 
+        onDelete: "CASCADE",
       },
       user_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
-          references: {
-            model: 'Users', 
-            key: 'id',
-          },
-          onDelete: 'CASCADE',
+        references: {
+          model: "users",
+          key: "id",
+        },
+        onDelete: "CASCADE",
       },
       role: {
         type: Sequelize.STRING,
         allowNull: false,
-        defaultValue: "user", 
+        defaultValue: "user",
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE
-      }
+        type: Sequelize.DATE,
+      },
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Members');
-  }
+    await queryInterface.dropTable("Members");
+  },
 };

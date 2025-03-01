@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5001;
 const { errorHandler } = require("./src/middleware/errorMiddleware");
 const { sequelize } = require("./models");
 const cors = require("cors");
@@ -14,17 +14,17 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-      origin: "http://localhost:3000",
-      methods: ["GET", "POST"]
-  }
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+  },
 });
 
 app.use(
   session({
-    secret: process.env.SECRET_KEY || 'secret_key', 
+    secret: process.env.SECRET_KEY || "secret_key",
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false }, 
+    cookie: { secure: false },
   })
 );
 
@@ -43,7 +43,7 @@ io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
 
   socket.on("disconnect", () => {
-      console.log(`User disconnected: ${socket.id}`);
+    console.log(`User disconnected: ${socket.id}`);
   });
 });
 
@@ -59,5 +59,3 @@ sequelize
   .catch((err) => {
     console.error("Error connecting to the database:", err);
   });
-
-  

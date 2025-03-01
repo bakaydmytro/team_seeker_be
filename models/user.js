@@ -7,14 +7,15 @@ module.exports = (sequelize, DataTypes) => {
 
       User.hasMany(models.Message, { foreignKey: "sender_id", as: "Messages" });
 
-      User.belongsToMany(models.Conversation, {
+      User.belongsToMany(models.Chat, {
         through: {
-          model: models.Member,  
-          unique: false, 
+            model: models.Member,
+            unique: false,
         },
         foreignKey: 'user_id',
         otherKey: 'chat_id',
-      });
+    });
+    
 
     }
 
@@ -48,7 +49,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       status: {
-        type: Sequelize.STRING,
+        type: DataTypes.STRING,
         allowNull: false,
         defaultValue: "offline",
       },

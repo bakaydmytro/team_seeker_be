@@ -1,31 +1,31 @@
-'use strict';
+"use strict";
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Messages', {
+    await queryInterface.createTable("Messages", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
       },
       chat_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: "Chats", 
+          model: "Chats",
           key: "id",
         },
-        onDelete: "CASCADE", 
+        onDelete: "CASCADE",
       },
       sender_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Users', 
-          key: 'id',
+          model: "users",
+          key: "id",
         },
-        onDelete: 'CASCADE',
+        onDelete: "CASCADE",
       },
       content: {
         type: Sequelize.TEXT,
@@ -34,19 +34,19 @@ module.exports = {
       status: {
         type: Sequelize.STRING,
         allowNull: false,
-        defaultValue: "sent", 
+        defaultValue: "sent",
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE
-      }
+        type: Sequelize.DATE,
+      },
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Messages');
-  }
+    await queryInterface.dropTable("Messages");
+  },
 };
