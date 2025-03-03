@@ -1,15 +1,15 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
-const axios = require('axios');
-const { Game, User } = require('../../models');
-const SteamAuth = require('node-steam-openid');
+const axios = require("axios");
+const { Game, User } = require("../../models");
+const SteamAuth = require("node-steam-openid");
 const { Op } = require("sequelize");
-const escapeWildcards = (input) => input.replace(/[%_]/g, "\\$&"); 
+const escapeWildcards = (input) => input.replace(/[%_]/g, "\\$&");
 
 const steam = new SteamAuth({
-  realm: 'http://localhost:5001', 
-  returnUrl: 'http://localhost:5001/api/users/steam/authenticate', 
+  realm: `http://localhost:${process.env.PORT || 5001}`,
+  returnUrl: `http://localhost:${process.env.PORT || 5001}/api/users/steam/authenticate`,
   apiKey: process.env.STEAM_API_KEY,
 });
 
@@ -25,14 +25,14 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error("Please add all fields");
   }
   const userExists = await User.findOne({
-    where: { email }
+    where: { email },
   });
 
   if (userExists) {
     res.status(400);
     throw new Error("User already exists");
   }
-  
+
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -65,7 +65,7 @@ const loginUser = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("Please add all fields");
   }
-  const user = await User.findOne({where: { email }});
+  const user = await User.findOne({ where: { email } });
 
   if (!user) {
     res.status(404);
@@ -88,26 +88,35 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const getLoggedInUser = asyncHandler(async (req, res) => {
-  
   if (!req.user) {
     res.status(401);
     throw new Error("Not authenticated");
   }
-  
-  res.status(200).json(req.user);
-});
 
+  const user = await User.findByPk(req.user.id, {
+    attributes: { exclude: ["password", "id"] },
+  });
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  res.status(200).json(user.toJSON());
+});
 
 const updateUser = async (req, res) => {
   try {
-    const { id } = req.params; 
-    const { username, email, birthday, password } = req.body; 
+    const { id } = req.params;
+    const { username, email, birthday, password } = req.body;
 
-    const userId = req.user.id; 
+    const userId = req.user.id;
     const user = await User.findByPk(userId);
 
     if (userId !== parseInt(id)) {
-      return res.status(403).json({ message: 'Forbidden: Not allowed to update other users' });
+      return res
+        .status(403)
+        .json({ message: "Forbidden: Not allowed to update other users" });
     }
 
     if (!userId) {
@@ -120,9 +129,11 @@ const updateUser = async (req, res) => {
         return res.status(400).json({ message: "Email already in use" });
       }
     } else if (email === user.email) {
-      return res.status(400).json({ message: "You entered your current email" });
+      return res
+        .status(400)
+        .json({ message: "You entered your current email" });
     }
-    
+
     const updatedFields = {};
 
     if (username && username.trim()) updatedFields.username = username;
@@ -130,10 +141,11 @@ const updateUser = async (req, res) => {
     if (birthday && birthday.trim()) updatedFields.birthday = birthday;
 
     if (password) {
-      
       const isSamePassword = await bcrypt.compare(password, user.password);
       if (isSamePassword) {
-        return res.status(400).json({ message: "New password cannot be the same as the old password" });
+        return res.status(400).json({
+          message: "New password cannot be the same as the old password",
+        });
       }
       const salt = await bcrypt.genSalt(10);
       updatedFields.password = await bcrypt.hash(password, salt);
@@ -142,14 +154,14 @@ const updateUser = async (req, res) => {
     if (Object.keys(updatedFields).length === 0) {
       return res.status(400).json({ message: "No new changes to update" });
     }
-    
+
     await user.update(updatedFields);
 
     const { password: _, ...safeUserData } = user.get({ plain: true });
 
-    return res.status(200).json({ 
-      message: "User updated successfully", 
-      user: safeUserData 
+    return res.status(200).json({
+      message: "User updated successfully",
+      user: safeUserData,
     });
   } catch (error) {
     console.error("Error in updateUser:", error);
@@ -164,13 +176,11 @@ const steamLogin = asyncHandler(async (req, res) => {
     res.redirect(redirectUrl);
   } catch (error) {
     console.error("Error initiating Steam login:", error);
-    res.status(500).json({ 
-      message: "Unable to initiate Steam login. Please try again later." 
+    res.status(500).json({
+      message: "Unable to initiate Steam login. Please try again later.",
     });
   }
 });
-
-
 
 const steamRedirect = asyncHandler(async (req, res) => {
   try {
@@ -178,10 +188,11 @@ const steamRedirect = asyncHandler(async (req, res) => {
     const steamId = steamUser._json.steamid;
     const personaname = steamUser._json.personaname;
     const profileUrl = steamUser._json.profileurl;
-    const avatarUrl = steamUser._json.avatarfull; 
-    const gameNowPlaying = steamUser._json.gameextrainfo || "No game currently playing"; 
+    const avatarUrl = steamUser._json.avatarfull;
+    const gameNowPlaying =
+      steamUser._json.gameextrainfo || "No game currently playing";
 
-    console.log(steamUser._json);  
+    console.log(steamUser._json);
 
     if (!personaname) {
       throw new Error("Missing personaname in Steam user data");
@@ -191,7 +202,6 @@ const steamRedirect = asyncHandler(async (req, res) => {
       throw new Error("Missing steamid in Steam user data");
     }
 
-    
     let user = await User.findOne({ where: { steamid: steamId } });
 
     if (!user) {
@@ -201,7 +211,7 @@ const steamRedirect = asyncHandler(async (req, res) => {
         password: steamId,
         profile_url: profileUrl,
         avatar_url: avatarUrl,
-        game_now_playing: gameNowPlaying, 
+        game_now_playing: gameNowPlaying,
       });
     } else {
       user = await user.update({
@@ -213,9 +223,8 @@ const steamRedirect = asyncHandler(async (req, res) => {
     const token = generateToken(user.id);
     req.session.username = user.username;
 
-     const redirectUrl = `http://localhost:3000/ChooseGamePage?token=${token}`;
-     res.redirect(redirectUrl);
-
+    const redirectUrl = `http://localhost:3000/ChooseGamePage?token=${token}`;
+    res.redirect(redirectUrl);
   } catch (error) {
     console.error("Error during Steam authentication:", error);
 
@@ -233,16 +242,19 @@ const getRecentlyPlayedGames = asyncHandler(async (req, res) => {
     const apiKey = process.env.STEAM_API_KEY;
 
     if (!steamid) {
-      return res.status(400).json({ message: "SteamID not found for the user" });
+      return res
+        .status(400)
+        .json({ message: "SteamID not found for the user" });
     }
 
-    
     const url = `http://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v0001/?key=${apiKey}&steamid=${steamid}&format=json`;
     const response = await axios.get(url);
     const { games, total_count } = response.data.response;
 
     if (!games || total_count === 0) {
-      return res.status(404).json({ message: "No recently played games found" });
+      return res
+        .status(404)
+        .json({ message: "No recently played games found" });
     }
 
     const user = await User.findOne({ where: { steamid } });
@@ -251,31 +263,28 @@ const getRecentlyPlayedGames = asyncHandler(async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-      const filteredGames = games.filter((game) =>
-        allowedGames.includes(game.appid)
-      );
+    const filteredGames = games.filter((game) =>
+      allowedGames.includes(game.appid)
+    );
 
-      if (filteredGames.length > 0) {
-        
-        const gameRecords = filteredGames.map((game) => ({
-          appid: game.appid,
-          name: game.name,
-          playtime_2weeks: game.playtime_2weeks || null,
-          playtime_forever: game.playtime_forever,
-          img_icon_url: game.img_icon_url,
-          img_logo_url: game.img_logo_url,
-          user_id: req.user.id,
-        }));
+    if (filteredGames.length > 0) {
+      const gameRecords = filteredGames.map((game) => ({
+        appid: game.appid,
+        name: game.name,
+        playtime_2weeks: game.playtime_2weeks || null,
+        playtime_forever: game.playtime_forever,
+        img_icon_url: game.img_icon_url,
+        img_logo_url: game.img_logo_url,
+        user_id: req.user.id,
+      }));
 
-        await Game.bulkCreate(gameRecords, { ignoreDuplicates: true });
+      await Game.bulkCreate(gameRecords, { ignoreDuplicates: true });
 
-        
-        return res
-          .status(200)
-          .json({ message: "Recently played games saved successfully", games: filteredGames });
-      }
-    
-
+      return res.status(200).json({
+        message: "Recently played games saved successfully",
+        games: filteredGames,
+      });
+    }
 
     const allTimeGames = await Game.findAll({
       where: { user_id: req.user.id },
@@ -285,7 +294,7 @@ const getRecentlyPlayedGames = asyncHandler(async (req, res) => {
       return res.status(404).json({ message: "No games found for this user" });
     }
 
-    const gamesWithoutrecentgames= allTimeGames.map((game) => ({
+    const gamesWithoutrecentgames = allTimeGames.map((game) => ({
       appid: game.appid,
       name: game.name,
       playtime_forever: game.playtime_forever,
@@ -308,7 +317,7 @@ const searchUsers = asyncHandler(async (req, res) => {
   try {
     const { query, id, page = 1, limit = 10 } = req.query;
 
-    const loggedInUserId = req.user.id; 
+    const loggedInUserId = req.user.id;
 
     if (!query || typeof query !== "string" || query.length > 100) {
       return res.status(400).json({ error: "Invalid query parameter." });
@@ -318,17 +327,22 @@ const searchUsers = asyncHandler(async (req, res) => {
 
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
-    if (isNaN(pageNum) || pageNum <= 0 || isNaN(limitNum) || limitNum <= 0 || limitNum > 100) {
+    if (
+      isNaN(pageNum) ||
+      pageNum <= 0 ||
+      isNaN(limitNum) ||
+      limitNum <= 0 ||
+      limitNum > 100
+    ) {
       return res.status(400).json({ error: "Invalid pagination parameters." });
     }
 
     const offset = (pageNum - 1) * limitNum;
 
     const where = {
-      username: { [Op.like]: `${safeQuery}%` }, 
-      id: { [Op.ne]: loggedInUserId }, 
+      username: { [Op.like]: `${safeQuery}%` },
+      id: { [Op.ne]: loggedInUserId },
     };
-
 
     const users = await User.findAndCountAll({
       where,
@@ -349,7 +363,7 @@ const searchUsers = asyncHandler(async (req, res) => {
       metadata: {
         query,
         caseSensitive: false,
-        totalResults: users.count, 
+        totalResults: users.count,
         totalPages,
         currentPage: parseInt(page),
         hasNextPage: page < totalPages,
@@ -358,7 +372,9 @@ const searchUsers = asyncHandler(async (req, res) => {
       data: users.rows,
     });
   } catch (err) {
-    res.status(500).json({ error: "Something went wrong", details: err.message });
+    res
+      .status(500)
+      .json({ error: "Something went wrong", details: err.message });
   }
 });
 
@@ -372,6 +388,3 @@ module.exports = {
   getRecentlyPlayedGames,
   searchUsers,
 };
-
-
-
