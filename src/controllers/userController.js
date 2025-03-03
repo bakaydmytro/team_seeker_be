@@ -8,8 +8,8 @@ const { Op } = require("sequelize");
 const escapeWildcards = (input) => input.replace(/[%_]/g, "\\$&"); 
 
 const steam = new SteamAuth({
-  realm: 'http://localhost:5000', 
-  returnUrl: 'http://localhost:5000/api/users/steam/authenticate', 
+  realm: 'http://localhost:5001', 
+  returnUrl: 'http://localhost:5001/api/users/steam/authenticate', 
   apiKey: process.env.STEAM_API_KEY,
 });
 
@@ -93,7 +93,7 @@ const getLoggedInUser = asyncHandler(async (req, res) => {
     res.status(401);
     throw new Error("Not authenticated");
   }
-
+  
   res.status(200).json(req.user);
 });
 
@@ -213,7 +213,7 @@ const steamRedirect = asyncHandler(async (req, res) => {
     const token = generateToken(user.id);
     req.session.username = user.username;
 
-     const redirectUrl = `http://localhost:3000/dashboard?token=${token}`;
+     const redirectUrl = `http://localhost:3000/ChooseGamePage?token=${token}`;
      res.redirect(redirectUrl);
 
   } catch (error) {
