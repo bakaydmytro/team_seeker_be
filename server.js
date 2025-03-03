@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const port = process.env.PORT || 5001;
+const port = process.env.PORT || 5000;
 const { errorHandler } = require("./src/middleware/errorMiddleware");
 const { sequelize, User, Chat, Message } = require("./models");
 const cors = require("cors");
@@ -35,6 +35,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/users", require("./src/routes/userRoutes"));
 app.use("/api/chats", require("./src/routes/chatRoutes"));
+app.use("/uploads/avatars", express.static("uploads"));
 app.use(errorHandler);
 app.get("/generate-json", async (req, res) => {
   try {

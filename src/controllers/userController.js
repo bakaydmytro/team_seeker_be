@@ -8,8 +8,8 @@ const { Op } = require("sequelize");
 const escapeWildcards = (input) => input.replace(/[%_]/g, "\\$&");
 
 const steam = new SteamAuth({
-  realm: `http://localhost:${process.env.PORT || 5001}`,
-  returnUrl: `http://localhost:${process.env.PORT || 5001}/api/users/steam/authenticate`,
+  realm: `http://localhost:${process.env.PORT || 5000}`,
+  returnUrl: `http://localhost:${process.env.PORT || 5000}/api/users/steam/authenticate`,
   apiKey: process.env.STEAM_API_KEY,
 });
 
@@ -19,20 +19,21 @@ const generateToken = (id) => {
 
 const registerUser = asyncHandler(async (req, res) => {
   const { username, email, birthday, password } = req.body;
+  const avatar_url = req.file ? `http://localhost:5000${req.file.path}` : null;
 
   if (!username || !email || !birthday || !password) {
     res.status(400);
     throw new Error("Please add all fields");
   }
   const userExists = await User.findOne({
-    where: { email },
+    where: { email }
   });
 
   if (userExists) {
     res.status(400);
     throw new Error("User already exists");
   }
-
+  
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -41,6 +42,7 @@ const registerUser = asyncHandler(async (req, res) => {
     email,
     birthday,
     password: hashedPassword,
+    avatar_url
   });
 
   if (user) {
@@ -50,6 +52,7 @@ const registerUser = asyncHandler(async (req, res) => {
       name: user.username,
       email: user.email,
       birthday: user.birthday,
+      avatar_url: user.avatar_url,
       token: generateToken(user.id),
     });
   } else {
@@ -378,6 +381,29 @@ const searchUsers = asyncHandler(async (req, res) => {
   }
 });
 
+const updateAvatar = asyncHandler(async (req, res) => {
+  const user = await User.findByPk(req.user.id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  if (!req.file) {
+    res.status(400);
+    throw new Error("No file uploaded");
+  }
+
+  user.avatar_url = `http://localhost:5000${req.file.path}`;
+
+  await user.save();
+
+  res.status(200).json({
+    message: "Avatar updated successfully",
+    avatar_url: user.avatar_url,
+  });
+});
+
 module.exports = {
   registerUser,
   loginUser,
@@ -387,4 +413,5 @@ module.exports = {
   steamRedirect,
   getRecentlyPlayedGames,
   searchUsers,
+  updateAvatar,
 };
