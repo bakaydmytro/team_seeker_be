@@ -2,23 +2,18 @@
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
-
     static associate(models) {
-
       User.hasMany(models.Message, { foreignKey: "sender_id", as: "Messages" });
 
       User.belongsToMany(models.Chat, {
         through: {
-            model: models.Member,
-            unique: false,
+          model: models.Member,
+          unique: false,
         },
-        foreignKey: 'user_id',
-        otherKey: 'chat_id',
-    });
-    
-
+        foreignKey: "user_id",
+        otherKey: "chat_id",
+      });
     }
-
   }
   User.init(
     {
@@ -31,7 +26,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       email: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
         unique: true,
         validate: {
           isEmail: true,
