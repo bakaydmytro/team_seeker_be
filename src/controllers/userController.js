@@ -19,6 +19,7 @@ const generateToken = (id) => {
 
 const registerUser = asyncHandler(async (req, res) => {
   const { username, email, birthday, password } = req.body;
+  const avatar_url = req.file ? `http://localhost:5000${req.file.path}` : null;
 
   if (!username || !email || !birthday || !password) {
     res.status(400);
@@ -41,6 +42,7 @@ const registerUser = asyncHandler(async (req, res) => {
     email,
     birthday,
     password: hashedPassword,
+    avatar_url
   });
 
   if (user) {
@@ -50,6 +52,7 @@ const registerUser = asyncHandler(async (req, res) => {
       name: user.username,
       email: user.email,
       birthday: user.birthday,
+      avatar_url: user.avatar_url,
       token: generateToken(user.id),
     });
   } else {
@@ -362,6 +365,29 @@ const searchUsers = asyncHandler(async (req, res) => {
   }
 });
 
+const updateAvatar = asyncHandler(async (req, res) => {
+  const user = await User.findByPk(req.user.id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  if (!req.file) {
+    res.status(400);
+    throw new Error("No file uploaded");
+  }
+
+  user.avatar_url = `http://localhost:5000${req.file.path}`;
+
+  await user.save();
+
+  res.status(200).json({
+    message: "Avatar updated successfully",
+    avatar_url: user.avatar_url,
+  });
+});
+
 module.exports = {
   registerUser,
   loginUser,
@@ -371,7 +397,5 @@ module.exports = {
   steamRedirect,
   getRecentlyPlayedGames,
   searchUsers,
+  updateAvatar,
 };
-
-
-

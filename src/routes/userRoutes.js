@@ -10,21 +10,23 @@ const {
   steamRedirect,
   getRecentlyPlayedGames,
   searchUsers,
+  updateAvatar
 } = require("../controllers/userController");
 const { protect } = require("../middleware/authMiddleware");
 const { steamProtect } = require("../middleware/steamAuth");
+const {upload, processAvatar} = require("../middleware/uploadMiddleware");
 
 /**
  * @swagger
  * /api/users/signup:
  *   post:
  *     summary: Register a new user
- *     description: Creates a new user account with the provided information. All fields are required, and the email must be unique.
+ *     description: Creates a new user account with the provided information. All fields are required, and the email must be unique. Supports optional avatar upload.
  *     tags: [Users]
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
@@ -39,17 +41,23 @@ const { steamProtect } = require("../middleware/steamAuth");
  *                 example: johndoe123
  *               email:
  *                 type: string
- *                 description: Valid email address for the user. Must be unique.
+ *                 format: email
+ *                 description: Valid email address. Must be unique.
  *                 example: johndoe@example.com
  *               birthday:
  *                 type: string
  *                 format: date
- *                 description: The user's birthdate in YYYY-MM-DD format.
+ *                 description: User's birthdate in YYYY-MM-DD format.
  *                 example: 1990-05-15
  *               password:
  *                 type: string
- *                 description: A secure password. Minimum 8 characters.
- *                 example: strongpassword123
+ *                 format: password
+ *                 description: Secure password. Minimum 8 characters.
+ *                 example: StrongPass123!
+ *               avatar_url:
+ *                 type: string
+ *                 format: binary
+ *                 description: (Optional) Profile avatar image (JPG, PNG).
  *     responses:
  *       201:
  *         description: User registered successfully.
@@ -77,8 +85,11 @@ const { steamProtect } = require("../middleware/steamAuth");
  *                       type: string
  *                       format: date
  *                       example: 1990-05-15
+ *                     avatar_url:
+ *                       type: string
+ *                       example: /uploads/avatar123.jpg
  *       400:
- *         description: An error occurred during registration (e.g., missing fields, invalid input, or email already in use).
+ *         description: Registration failed (missing fields, invalid input, or email already in use).
  *         content:
  *           application/json:
  *             schema:
@@ -98,7 +109,66 @@ const { steamProtect } = require("../middleware/steamAuth");
  *                   type: string
  *                   example: Internal server error.
  */
-router.post("/signup", registerUser);
+router.post("/signup", upload.single("avatar_url"), processAvatar, registerUser);
+
+/**
+ * @swagger
+ * /api/users/avatar:
+ *   put:
+ *     summary: Upload or update user avatar
+ *     description: Allows authenticated users to upload or update their profile avatar.
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []  # Indicates this endpoint requires Bearer token authorization
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               avatar_url:
+ *                 type: string
+ *                 format: binary
+ *                 description: The avatar image file (JPG, PNG, or GIF).
+ *     responses:
+ *       200:
+ *         description: Avatar uploaded successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Avatar uploaded successfully.
+ *                 avatar_url:
+ *                   type: string
+ *                   example: http://localhost:5000/uploads/avatars/1740761727051-888137459.jpg
+ *       400:
+ *         description: Bad request (e.g., no file uploaded, wrong format).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: No file uploaded.
+ *       401:
+ *         description: Unauthorized (user not authenticated).
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error.
+ */
+router.put("/avatar", protect, upload.single("avatar_url"), processAvatar, updateAvatar);
 
 /**
  * @swagger
