@@ -32,7 +32,7 @@ jobs:
       
       - name: Build and Push Docker Image
         run: |
-          IMAGE_NAME=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/api-repo/api:${{ github.sha }}
+          IMAGE_NAME=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/images/api:${{ github.sha }}
           docker build -t $IMAGE_NAME ./api
           docker push $IMAGE_NAME
 
