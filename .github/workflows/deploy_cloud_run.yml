@@ -2,11 +2,10 @@ name: Deploy to Cloud run
 
 on:
   push:
-    branches: [ dev ]
+    branches: [dev]
   pull_request:
-    branches: [ dev ]
+    branches: [dev]
   workflow_dispatch:
-      
 
 jobs:
   build-and-deploy:
@@ -25,7 +24,7 @@ jobs:
       - name: Configure Docker and gcloud
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev
-      
+
       - name: Build and Push Docker Image
         run: |
           IMAGE_NAME=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/images/api:${{ github.sha }}
@@ -39,3 +38,4 @@ jobs:
             --region=us-central1 \
             --platform=managed \
             --allow-unauthenticated
+            --set-env-vars "MYSQL_HOST=/cloudsql/teamseeker-453220:us-central1:team-seeker-db,MYSQL_USER=root,MYSQL_ROOT_PASSWORD=${{ secrets.DATABASE_PASSWORD }},MYSQL_DATABASE=teamseeker ,API_PORT=8080"
