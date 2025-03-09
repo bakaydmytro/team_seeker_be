@@ -1,0 +1,45 @@
+name: Deploy API to Cloud Run
+
+on:
+  push:
+    branches:
+      - dev 
+  pull_request:
+    branches:
+      - dev 
+    types:
+      - closed  
+  workflow_dispatch:
+      
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy API
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      - name: Configure Docker and gcloud
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev
+      
+      - name: Build and Push Docker Image
+        run: |
+          IMAGE_NAME=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/images/api:${{ github.sha }}
+          docker build -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
+
+      - name: Deploy API to Cloud Run
+        run: |
+          gcloud run deploy my-api \
+            --image=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/api-repo/api:${{ github.sha }} \
+            --region=us-central1 \
+            --platform=managed \
+            --allow-unauthenticated
