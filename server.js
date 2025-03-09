@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.API_PORT || 5000;
 const { errorHandler } = require("./src/middleware/errorMiddleware");
 const { sequelize, User, Chat, Message } = require("./models");
 const cors = require("cors");
