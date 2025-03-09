@@ -39,7 +39,7 @@ jobs:
       - name: Deploy API to Cloud Run
         run: |
           gcloud run deploy my-api \
-            --image=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/api-repo/api:${{ github.sha }} \
+            --image=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/images/api:${{ github.sha }} \
             --region=us-central1 \
             --platform=managed \
             --allow-unauthenticated
