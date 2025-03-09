@@ -10,4 +10,7 @@ COPY . .
 
 EXPOSE 8080
 
-CMD npx sequelize-cli db:migrate && node server.js
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
