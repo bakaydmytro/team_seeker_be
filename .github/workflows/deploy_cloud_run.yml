@@ -1,14 +1,10 @@
-name: Deploy API to Cloud Run
+name: Deploy to Cloud run
 
 on:
   push:
-    branches:
-      - dev 
+    branches: [ dev ]
   pull_request:
-    branches:
-      - dev 
-    types:
-      - closed  
+    branches: [ dev ]
   workflow_dispatch:
       
 
