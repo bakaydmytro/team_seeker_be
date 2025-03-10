@@ -8,6 +8,9 @@ RUN npm install -g sequelize-cli && npm install
 
 COPY . .
 
-EXPOSE 5001
+EXPOSE 8080
 
-CMD ["node", "server.js"]
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

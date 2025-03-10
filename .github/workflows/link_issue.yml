@@ -3,6 +3,7 @@ name: Link issue
 on:
   pull_request:
     types: [opened, edited]
+  workflow_dispatch:
 
 jobs:
   update-description:
