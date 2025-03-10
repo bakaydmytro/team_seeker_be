@@ -10,7 +10,4 @@ COPY . .
 
 EXPOSE 8080
 
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh && ls -l /entrypoint.sh
-
-ENTRYPOINT ["/entrypoint.sh"]
+CMD ["npx", "sequelize-cli", "db:migrate"] && node server.js
