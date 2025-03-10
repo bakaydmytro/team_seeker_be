@@ -71,6 +71,11 @@ const createChat  = asyncHandler(async (req, res) => {
         limit,
         offset,
       });
+
+      await Message.update(
+        { status: "read" },
+        { where: { sender_id: { [Op.ne]: userId }, chat_id: chat_id, status: { [Op.ne]: "read" } } }
+      );
       
       res.json({ messages });
   

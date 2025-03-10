@@ -166,6 +166,47 @@ io.on("connection", (socket) => {
 
   });
 
+  socket.on("messageDelivered", async ({ message_id }) => {
+    try {
+        const userId = socket.user.id; 
+
+        if (!message_id || isNaN(message_id)) {
+            console.log("[Error] messageId Not a Number:", message_id);
+            return;
+        }
+
+        const message = await Message.findByPk(message_id, {
+            include: [
+                {
+                    model: Chat,
+                    include: {
+                        model: User,
+                        where: { id: userId },
+                        through: { attributes: [] },
+                    },
+                },
+            ],
+        });
+
+        if (!message) {
+            socket.emit("messageError", "Message not found or access denied.");
+            return;
+        }
+
+        await message.update({ status: "delivered" });
+
+        socket.to(`chat_${message.chat_id}`).emit("messageStatusUpdated", {
+            message_id,
+            status: "delivered",
+        });
+
+    } catch (error) {
+        console.error("[Error] messageDelivered:", error);
+        socket.emit("serverError", "An error occurred while updating message status.");
+    }
+});
+
+
   socket.on('leaveChat', async ({ chat_id }) => {
 
     const userId = socket.user.id; 
