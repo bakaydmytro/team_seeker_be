@@ -402,6 +402,8 @@ router.get('/steam/authenticate', steamRedirect);
  *     summary: Retrieve and save user's recently played games
  *     description: Fetches the recently played games for a user based on their Steam ID, filters the games based on allowed criteria, and saves them in the database. Requires a valid Steam API key.
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []  # Bearer token for authorization
  *     requestBody:
  *       required: true
  *       content:
@@ -480,7 +482,7 @@ router.get('/steam/authenticate', steamRedirect);
  *                   type: string
  *                   example: Internal server error details.
  */
-router.get('/game-history', steamProtect, getRecentlyPlayedGames);
+router.post('/game-history', steamProtect, getRecentlyPlayedGames);
 
 /**
  * @swagger

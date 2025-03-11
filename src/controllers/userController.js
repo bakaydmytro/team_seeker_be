@@ -105,7 +105,17 @@ const getLoggedInUser = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
 
-  res.status(200).json(user.toJSON());
+  const games = await Game.findAll({
+    where: { user_id: req.user.id },
+    attributes: ['appid', 'name', 'playtime_2weeks', 'playtime_forever', 'img_icon_url', 'img_logo_url'],
+  });
+
+  const userWithGames = {
+    ...user.toJSON(),
+    games: games || [],
+  };
+
+  res.status(200).json(userWithGames);
 });
 
 const updateUser = async (req, res) => {
