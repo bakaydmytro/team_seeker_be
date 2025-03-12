@@ -38,4 +38,3 @@ jobs:
             --region=us-central1 \
             --platform=managed \
             --allow-unauthenticated
-            --set-env-vars "MYSQL_HOST=/cloudsql/teamseeker-453220:us-central1:team-seeker-db,MYSQL_USER=root,MYSQL_PASSWORD=${{ secrets.DATABASE_PASSWORD }},MYSQL_DATABASE=teamseeker ,API_PORT=8080"
