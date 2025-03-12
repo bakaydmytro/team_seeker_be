@@ -68,6 +68,17 @@ app.get("/users", async (req, res) => {
 });
 swaggerDocs(app);
 
+app.get("/health", async (req, res) => {
+  try {
+    await sequelize.authenticate();
+    res.status(200).json({ status: "ok" });
+  } catch (error) {
+    console.error("Health check failed:", error);
+    res.status(500).json({ status: "error", error: "Database connection failed" });
+  }
+});
+
+
 io.use((socket, next) => {
   const token = socket.handshake.query.token;
 
