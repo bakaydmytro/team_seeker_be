@@ -85,11 +85,22 @@ io.use((socket, next) => {
   });
 });
 
-io.on("connection", (socket) => {
-  console.log(`User connected: ${socket.user.id}`);
+io.on("connection", async (socket) => {
+
+  const userId = socket.user.id;
+
+   if (!userId) {
+      console.log("User ID is missing in connection query.");
+      return;
+    }
+
+  console.log(`User ${userId} connected`);
+
+  await User.update({ status: "online" }, { where: { id: userId } });
+
+  io.emit("userStatusChanged", { userId, status: "online" });
 
   socket.on("joinChat", async ({ chat_id }) => {
-    const userId = socket.user.id;
     const chat = await Chat.findByPk(chat_id, {
       include: {
         model: User,
@@ -108,7 +119,6 @@ io.on("connection", (socket) => {
   });
 
   socket.on("sendMessage", async ({ chat_id, content }) => {
-    const userId = socket.user.id;
 
     if (!chat_id || !content) {
       socket.emit("messageError", "Chat ID and content are required.");
@@ -177,8 +187,6 @@ io.on("connection", (socket) => {
 
   socket.on("messageDelivered", async ({ message_id }) => {
     try {
-        const userId = socket.user.id; 
-
         if (!message_id || isNaN(message_id)) {
             console.log("[Error] messageId Not a Number:", message_id);
             return;
@@ -217,7 +225,6 @@ io.on("connection", (socket) => {
 
 
   socket.on('leaveChat', async ({ chat_id }) => {
-    const userId = socket.user.id; 
     const chat = await Chat.findByPk(chat_id, {
       include: {
         model: User,
@@ -234,8 +241,12 @@ io.on("connection", (socket) => {
     socket.to(`chat_${chat_id}`).emit("userLeft", { userId });
   });
 
-  socket.on("disconnect", () => {
-    console.log(`User disconnected: ${socket.user.id}`);
+  socket.on("disconnect", async () => {
+    console.log(`User ${userId} disconnected`);
+
+    await User.update({ status: "offline" }, { where: { id: userId } });
+
+    io.emit("userStatusChanged", { userId, status: "offline" });
   });
 });
 
