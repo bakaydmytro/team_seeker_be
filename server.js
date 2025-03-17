@@ -35,6 +35,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/users", require("./src/routes/userRoutes"));
 app.use("/api/chats", require("./src/routes/chatRoutes"));
+app.use("/api/friends", require("./src/routes/friendRoutes"));
 app.use("/uploads/avatars", express.static("uploads"));
 app.use(errorHandler);
 app.get("/generate-json", async (req, res) => {

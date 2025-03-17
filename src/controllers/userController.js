@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
 const axios = require("axios");
-const { Game, User } = require("../../models");
+const { Game, User, Friendship } = require("../../models");
 const SteamAuth = require("node-steam-openid");
 const { Op } = require("sequelize");
 const escapeWildcards = (input) => input.replace(/[%_]/g, "\\$&");
@@ -414,6 +414,76 @@ const updateAvatar = asyncHandler(async (req, res) => {
   });
 });
 
+const getFriends = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const offset = (page - 1) * limit;
+
+  try {
+    const { count, rows: friendships } = await Friendship.findAndCountAll({
+      where: { 
+        [Op.or]: [
+          { requester_id: userId, status: 'accepted' },
+          { addressee_id: userId, status: 'accepted' },
+        ]
+      },
+      include: [
+        { model: User, as: 'requester', attributes: ['id', 'username', 'avatar_url'] },
+        { model: User, as: 'addressee', attributes: ['id', 'username', 'avatar_url'] },
+      ],
+      limit,
+      offset,
+    });
+
+    if (!friendships.length) {
+      return res.status(200).json({ message: "No friends found", friends: [] });
+    }
+
+    const friends = friendships.map(f => 
+      f.requester_id === userId ? f.addressee : f.requester
+    );
+
+    res.json({
+      friends,
+      total: count,
+      page,
+      totalPages: Math.ceil(count / limit),
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error during getting friends", error });
+  }
+});
+
+const getRequests = asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const offset = (page - 1) * limit;
+
+  try {
+    const { count, rows: incomingRequests } = await Friendship.findAndCountAll({
+      where: { addressee_id: req.user.id, status: 'pending' },
+      include: [{ model: User, as: 'requester', attributes: ['id', 'username', 'avatar_url'] }],
+      limit,
+      offset,
+    });
+
+    if (!incomingRequests.length) {
+      return res.status(200).json({ message: "No incoming friend requests", requests: [] });
+    }
+
+    res.status(200).json({
+      requests: incomingRequests,
+      total: count,
+      page,
+      totalPages: Math.ceil(count / limit),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error getting incoming requests' });
+  }
+});
+
 module.exports = {
   registerUser,
   loginUser,
@@ -424,4 +494,6 @@ module.exports = {
   getRecentlyPlayedGames,
   searchUsers,
   updateAvatar,
+  getFriends,
+  getRequests
 };
