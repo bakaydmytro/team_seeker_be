@@ -1,5 +1,5 @@
 const asyncHandler = require("express-async-handler");
-const { User, Chat, Message } = require('../../models');
+const { User, Chat, Message, Member } = require('../../models');
 const { Op } = require("sequelize");
 
 const createChat  = asyncHandler(async (req, res) => {
@@ -84,9 +84,42 @@ const createChat  = asyncHandler(async (req, res) => {
       res.status(500).json({ error: "Unable to get messages." });
     }
   });
+
+  const getChatUsers = async (req, res) => {
+    try {
+      const { chat_id } = req.params;
+      const user_id = req.user.id;
+      
+      const chat = await Chat.findByPk(chat_id, {
+        include: {
+          model: User,
+          attributes: ["id", "username", "avatar_url", "status"],
+          through: { attributes: [] }, 
+        },
+      });
+
+      if (!chat) {
+        return res.status(404).json({ error: "Chat not found" });
+      }
+
+      const isMember = await Member.findOne({
+        where: { chat_id, user_id },
+      });
+  
+      if (!isMember) {
+        return res.status(403).json({ error: "Access denied. You are not a member of this chat." });
+      }
+  
+      res.json(chat.Users); 
+    } catch (error) {
+      console.error("Error fetching chat users:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  };
  
   module.exports = {
     createChat,
-    getMessages
+    getMessages,
+    getChatUsers
   };
 

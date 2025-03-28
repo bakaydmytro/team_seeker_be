@@ -2,7 +2,8 @@ const express = require("express");
 const router = express.Router();
 const {
   createChat,
-  getMessages
+  getMessages,
+  getChatUsers
 } = require("../controllers/chatController");
 const { protect } = require("../middleware/authMiddleware");
 
@@ -192,5 +193,77 @@ router.post("/create", protect, createChat);
  *                   example: "Server error. Please try again later."
  */
 router.get("/:chat_id/messages", protect, getMessages);
+
+/**
+ * @swagger
+ * /api/chats/{chat_id}/users:
+ *   get:
+ *     summary: Get users in a chat
+ *     description: Retrieves a list of users who are members of a specified chat.
+ *     tags: [Chats]
+ *     security:
+ *       - bearerAuth: []  # Requires authentication
+ *     parameters:
+ *       - in: path
+ *         name: chat_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the chat
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved list of users in the chat
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 5
+ *                   username:
+ *                     type: string
+ *                     example: "Alice"
+ *                   avatar_url:
+ *                     type: string
+ *                     example: "/uploads/avatar1.jpg"
+ *                   status:
+ *                     type: string
+ *                     example: "online"
+ *       404:
+ *         description: Chat not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Chat not found"
+ *       401:
+ *         description: Unauthorized. Missing or invalid Bearer token.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Not authorized"
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Internal server error"
+ */
+router.get("/:chat_id/users", protect, getChatUsers);
 
 module.exports = router;
