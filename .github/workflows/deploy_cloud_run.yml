@@ -37,4 +37,6 @@ jobs:
             --image=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/images/api:${{ github.sha }} \
             --region=us-central1 \
             --platform=managed \
-            --allow-unauthenticated
+            --allow-unauthenticated \
+            --timeout=600
+
