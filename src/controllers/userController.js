@@ -10,7 +10,7 @@ const escapeWildcards = (input) => input.replace(/[%_]/g, "\\$&");
 const steam = new SteamAuth({
   realm: `http://localhost:${process.env.PORT || 5000}`,
   returnUrl: `http://localhost:${process.env.PORT || 5000}/api/users/steam/authenticate`,
-  apiKey: process.env.STEAM_API_KEY,
+  apiKey: process.env.STEAM_API_KEY
 });
 
 const generateToken = (id) => {
@@ -281,17 +281,33 @@ const getRecentlyPlayedGames = asyncHandler(async (req, res) => {
     );
 
     if (filteredGames.length > 0) {
-      const gameRecords = filteredGames.map((game) => ({
-        appid: game.appid,
-        name: game.name,
-        playtime_2weeks: game.playtime_2weeks || null,
-        playtime_forever: game.playtime_forever,
-        img_icon_url: game.img_icon_url,
-        img_logo_url: game.img_logo_url,
-        user_id: req.user.id,
-      }));
+      for (const game of filteredGames) {
+        const existingGame = await Game.findOne({
+          where: {
+            user_id: req.user.id,
+            appid: game.appid,
+          },
+        });
 
-      await Game.bulkCreate(gameRecords, { ignoreDuplicates: true });
+        if (existingGame) {
+          await existingGame.update({
+            playtime_2weeks: game.playtime_2weeks || existingGame.playtime_2weeks,
+            playtime_forever: game.playtime_forever,
+            img_icon_url: game.img_icon_url,
+            img_logo_url: game.img_logo_url,
+          });
+        } else {
+          await Game.create({
+            appid: game.appid,
+            name: game.name,
+            playtime_2weeks: game.playtime_2weeks || null,
+            playtime_forever: game.playtime_forever,
+            img_icon_url: game.img_icon_url,
+            img_logo_url: game.img_logo_url,
+            user_id: req.user.id,
+          });
+        }
+      }
 
       return res.status(200).json({
         message: "Recently played games saved successfully",
