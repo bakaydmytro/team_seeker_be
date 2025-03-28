@@ -328,68 +328,58 @@ const getRecentlyPlayedGames = asyncHandler(async (req, res) => {
 
 const searchUsers = asyncHandler(async (req, res) => {
   try {
-    const { query, id, page = 1, limit = 10 } = req.query;
-
+    const { query = "", page = 1, limit = 10 } = req.query;
     const loggedInUserId = req.user.id;
 
-    if (!query || typeof query !== "string" || query.length > 100) {
+    if (typeof query !== "string" || query.length > 100) {
       return res.status(400).json({ error: "Invalid query parameter." });
     }
 
-    const safeQuery = escapeWildcards(query);
-
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
-    if (
-      isNaN(pageNum) ||
-      pageNum <= 0 ||
-      isNaN(limitNum) ||
-      limitNum <= 0 ||
-      limitNum > 100
-    ) {
+
+    if (isNaN(pageNum) || pageNum <= 0 || isNaN(limitNum) || limitNum <= 0 || limitNum > 100) {
       return res.status(400).json({ error: "Invalid pagination parameters." });
     }
 
     const offset = (pageNum - 1) * limitNum;
 
     const where = {
-      username: { [Op.like]: `${safeQuery}%` },
-      id: { [Op.ne]: loggedInUserId },
+      id: { [Op.ne]: loggedInUserId }
     };
+
+    if (query) {
+      where.username = { [Op.like]: `${query}%` };
+    }
 
     const users = await User.findAndCountAll({
       where,
-      attributes: ["id", "username"], // Limit exposed fields
+      attributes: ["id", "username", "email", "status"],
       limit: limitNum,
       offset,
     });
 
     if (users.rows.length === 0) {
-      return res.status(404).json({
-        message: "No users found matching the given criteria.",
-        criteria: { query, id },
-      });
+      return res.status(404).json({ message: "No users found." });
     }
 
-    const totalPages = Math.ceil(users.count / limit);
+    const totalPages = Math.ceil(users.count / limitNum);
     res.status(200).json({
       metadata: {
         query,
-        caseSensitive: false,
         totalResults: users.count,
         totalPages,
-        currentPage: parseInt(page),
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
+        currentPage: pageNum,
+        hasNextPage: pageNum < totalPages,
+        hasPreviousPage: pageNum > 1,
       },
       data: users.rows,
     });
   } catch (err) {
-    res
-      .status(500)
-      .json({ error: "Something went wrong", details: err.message });
+    res.status(500).json({ error: "Something went wrong", details: err.message });
   }
 });
+
 
 const updateAvatar = asyncHandler(async (req, res) => {
   const user = await User.findByPk(req.user.id);
