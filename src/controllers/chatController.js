@@ -1,47 +1,66 @@
 const asyncHandler = require("express-async-handler");
 const { User, Chat, Message, Member } = require('../../models');
-const { Op } = require("sequelize");
+const { Sequelize, Op } = require("sequelize");
 
-const createChat  = asyncHandler(async (req, res) => {
-    try {
-  
-      const { recipientId } = req.body;
-      const senderId = req.user.id;
-  
-      if (!recipientId) {
-        return res.status(400).json({ error: "Recipient ID is required." });
-      }
+const createOrGetChat = asyncHandler(async (req, res) => {
+  try {
+    const { recipientId } = req.body;
+    const senderId = req.user.id;
 
-      if (parseInt(recipientId) === senderId) {
-        return res.status(400).json({ error: "You cannot make chat with yourself." });
+    if (!recipientId) {
+      return res.status(400).json({ error: "Recipient ID is required." });
+    }
+
+    if (parseInt(recipientId) === senderId) {
+      return res.status(400).json({ error: "You cannot make chat with yourself." });
     }
 
     const existingChat = await Chat.findOne({
-      include: {
-        model: User,
-        where: { id: senderId },
-        through: { attributes: [] },
-      },
-      where: {
-        '$id$': { [Op.in]: [senderId, recipientId] },
-      },
+      include: [
+        {
+          model: Member,
+          as: 'Members',
+          attributes: [],
+          where: {
+            user_id: { [Op.in]: [senderId, recipientId] }, 
+          },
+          required: true, 
+        },
+        {
+          model: User,
+          through: { attributes: [] }, 
+          attributes: ["id", "username", "avatar_url"],
+        },
+      ],
+      where: { isGroup: false },
+      group: ['Chat.id'], 
+      having: Sequelize.literal(`
+        (SELECT COUNT(*) FROM Members WHERE Members.chat_id = Chat.id) = 2 
+        AND EXISTS (
+          SELECT 1 FROM Members 
+          WHERE Members.chat_id = Chat.id AND Members.user_id = ${senderId}
+        )
+        AND EXISTS (
+          SELECT 1 FROM Members 
+          WHERE Members.chat_id = Chat.id AND Members.user_id = ${recipientId}
+        )
+      `),
     });
 
     if (existingChat) {
-      return res.status(400).json({ error: "Chat with this recipient already exists." });
+      return res.status(200).json(existingChat); 
     }
 
-  
-      const chat = await Chat.create({ isGroup: false });
-      await chat.addUsers([senderId, recipientId]);
-  
-      res.status(200).json(chat);
-  
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: "Unable to create or retrieve chat." });
-    }
-  });
+
+    const chat = await Chat.create({ isGroup: false });
+    await chat.addUsers([senderId, recipientId]); 
+
+    res.status(201).json(chat); 
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Unable to create or retrieve chat." });
+  }
+});
 
   const getMessages = asyncHandler(async (req, res) => {
     try {
@@ -116,10 +135,44 @@ const createChat  = asyncHandler(async (req, res) => {
       res.status(500).json({ error: "Internal server error" });
     }
   };
- 
+  
+  const getUserChats = asyncHandler(async (req, res) => {
+    try {
+      const userId = req.user.id;
+  
+      const chats = await Chat.findAll({
+        include: [
+          {
+            model: Member,
+            where: { user_id: userId },
+            attributes: [],
+          },
+          {
+            model: User,
+            through: { attributes: [] }, 
+            attributes: ["id", "username", "avatar_url"],
+            where: {
+              id: {
+                [Op.ne]: userId, 
+              },
+            },
+          },
+        ],
+        where: { isGroup: false },
+        order: [['updatedAt', 'DESC']], 
+      });
+  
+      return res.status(200).json(chats);
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Unable to retrieve chats." });
+    }
+  });
+
   module.exports = {
-    createChat,
+    createOrGetChat,
     getMessages,
-    getChatUsers
+    getChatUsers,
+    getUserChats
   };
 
