@@ -205,27 +205,53 @@ const steamRedirect = asyncHandler(async (req, res) => {
     const profileUrl = steamUser._json.profileurl;
     const avatarUrl = steamUser._json.avatarfull;
     const gameNowPlaying =
-      steamUser._json.gameextrainfo || "No game currently playing";
+    steamUser._json.gameextrainfo || "No game currently playing";
 
     if (!personaname || !steamId) {
       throw new Error("Missing essential Steam user data");
     }
 
-    let user = await User.findOne({ where: { steamid: steamId } });
-    if (!user) {
-      user = await User.create({
-        username: personaname,
-        steamid: steamId,
-        password: steamId,
-        profile_url: profileUrl,
-        avatar_url: avatarUrl,
-        game_now_playing: gameNowPlaying,
-      });
+    let user;
+    const steamUserAccount = await User.findOne({ where: { steamid: steamId } });
+
+    if (req.user) {
+      user = await User.findByPk(req.user.id);
+
+      if (steamUserAccount) {
+        
+          await steamUserAccount.update({
+            email: user.email,
+            password: user.password,
+          });
+
+          await user.destroy();
+	        user = steamUserAccount;
+
+      } else {
+
+         await user.update({
+	       username: personaname,
+         steamid: steamId,
+         avatar_url: avatarUrl,
+         game_now_playing: gameNowPlaying,
+	      });
+      
+    }
     } else {
-      await user.update({
-        avatar_url: avatarUrl,
-        game_now_playing: gameNowPlaying,
-      });
+
+      user = steamUserAccount;
+
+      if (!user) {
+       user = await User.create({
+          username: personaname,
+          steamid: steamId,
+          password: steamId, 
+          profile_url: profileUrl,
+          avatar_url: avatarUrl,
+          game_now_playing: gameNowPlaying,
+        });
+      }
+      
     }
 
     const apiKey = process.env.STEAM_API_KEY;
@@ -242,16 +268,17 @@ const steamRedirect = asyncHandler(async (req, res) => {
     const missingAllowedGames = allowedGames.filter(
       appid => !games.some(game => game.appid === appid)
     );
-    
-    if (missingAllowedGames.length > 0) { 
+
+    if (missingAllowedGames.length > 0) {
       try {
         const recentUrl = `http://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v0001/?key=${apiKey}&steamid=${steamId}&format=json`;
         const recentResponse = await axios.get(recentUrl);
         const recentGames = recentResponse.data.response.games || [];
-        
-        const newRecentGames = recentGames.filter(game => missingAllowedGames.includes(game.appid));
+
+        const newRecentGames = recentGames.filter(game =>
+          missingAllowedGames.includes(game.appid)
+        );
         games.push(...newRecentGames);
-    
       } catch (err) {
         console.warn("Failed to fetch recently played games", err);
       }
@@ -267,7 +294,7 @@ const steamRedirect = asyncHandler(async (req, res) => {
       if (existingGame) {
         await existingGame.update({
           playtime_forever: Math.floor(game.playtime_forever / 60),
-          playtime_2weeks: Math.floor(game.playtime_2weeks / 60) || Math.floor(existingGame.playtime_2weeks / 60),
+          playtime_2weeks: Math.floor(game.playtime_2weeks / 60) || existingGame.playtime_2weeks,
           img_icon_url: game.img_icon_url,
           img_logo_url: game.img_logo_url,
         });
@@ -289,6 +316,7 @@ const steamRedirect = asyncHandler(async (req, res) => {
 
     const redirectUrl = `http://localhost:3000/ChooseGamePage?token=${token}`;
     res.redirect(redirectUrl);
+
   } catch (error) {
     console.error("Error during Steam authentication:", error);
     res.status(500).json({

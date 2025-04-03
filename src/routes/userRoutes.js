@@ -330,28 +330,32 @@ router.get("/me", protect, getLoggedInUser);
  * @swagger
  * /api/users/steam:
  *   get:
- *     summary: Initiate Steam login
- *     description: Redirects the user to the Steam login page for authentication. After successful login, the user will be redirected back to the application with the authentication result.
+ *     summary: Authenticate with Steam
+ *     description: Logs in with Steam. If the user is already authenticated with a token, Steam will be linked to their account.
  *     tags: [Users]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         schema:
+ *           type: string
+ *           example: Bearer your_token_here
+ *         required: false
+ *         description: Optional Bearer token for authentication.
  *     responses:
- *       302:
- *         description: Redirects the user to the Steam login page.
- *         headers:
- *           Location:
- *             description: The URL of the Steam login page.
- *             schema:
- *               type: string
- *               example: https://steamcommunity.com/openid/login
- *       500:
- *         description: Internal server error.
+ *       200:
+ *         description: Successfully authenticated with Steam.
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 error:
+ *                 message:
  *                   type: string
- *                   example: Failed to initiate Steam login.
+ *                   example: "Steam authentication successful."
+ *       401:
+ *         description: Unauthorized. Token is invalid.
+ *       500:
+ *         description: Internal server error.
  */
 router.get("/steam", steamLogin);
 
