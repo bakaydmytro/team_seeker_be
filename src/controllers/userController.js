@@ -266,8 +266,8 @@ const steamRedirect = asyncHandler(async (req, res) => {
 
       if (existingGame) {
         await existingGame.update({
-          playtime_forever: game.playtime_forever,
-          playtime_2weeks: game.playtime_2weeks || existingGame.playtime_2weeks,
+          playtime_forever: Math.floor(game.playtime_forever / 60),
+          playtime_2weeks: Math.floor(game.playtime_2weeks / 60) || Math.floor(existingGame.playtime_2weeks / 60),
           img_icon_url: game.img_icon_url,
           img_logo_url: game.img_logo_url,
         });
@@ -275,8 +275,8 @@ const steamRedirect = asyncHandler(async (req, res) => {
         await Game.create({
           appid: game.appid,
           name: game.name,
-          playtime_forever: game.playtime_forever,
-          playtime_2weeks: game.playtime_2weeks || null,
+          playtime_forever: Math.floor(game.playtime_forever / 60),
+          playtime_2weeks: Math.floor(game.playtime_2weeks / 60) || null,
           img_icon_url: game.img_icon_url,
           img_logo_url: game.img_logo_url,
           user_id: user.id,
