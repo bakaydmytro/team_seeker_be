@@ -21,6 +21,9 @@ module.exports = {
       playtime_forever: {
         type: Sequelize.INTEGER
       },
+      last_played: {
+        type: Sequelize.DATE,
+      },
       img_icon_url: {
         type: Sequelize.STRING
       },
