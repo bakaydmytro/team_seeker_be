@@ -12,6 +12,7 @@ module.exports = (sequelize, DataTypes) => {
       name: DataTypes.STRING,
       playtime_2weeks: DataTypes.INTEGER,
       playtime_forever: DataTypes.INTEGER,
+      last_played: DataTypes.DATE,
       img_icon_url: DataTypes.STRING,
       img_logo_url: DataTypes.STRING,
       user_id: DataTypes.INTEGER,

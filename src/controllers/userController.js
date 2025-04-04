@@ -287,6 +287,7 @@ const steamRedirect = asyncHandler(async (req, res) => {
     const filteredGames = games.filter(game => allowedGames.includes(game.appid));
 
     for (const game of filteredGames) {
+      const lastPlayed = game.rtime_last_played ? new Date(game.rtime_last_played * 1000) : null;
       const existingGame = await Game.findOne({
         where: { user_id: user.id, appid: game.appid },
       });
@@ -295,6 +296,7 @@ const steamRedirect = asyncHandler(async (req, res) => {
         await existingGame.update({
           playtime_forever: Math.floor(game.playtime_forever / 60),
           playtime_2weeks: Math.floor(game.playtime_2weeks / 60) || existingGame.playtime_2weeks,
+          last_played: lastPlayed,
           img_icon_url: game.img_icon_url,
           img_logo_url: game.img_logo_url,
         });
@@ -304,6 +306,7 @@ const steamRedirect = asyncHandler(async (req, res) => {
           name: game.name,
           playtime_forever: Math.floor(game.playtime_forever / 60),
           playtime_2weeks: Math.floor(game.playtime_2weeks / 60) || null,
+          last_played: lastPlayed,
           img_icon_url: game.img_icon_url,
           img_logo_url: game.img_logo_url,
           user_id: user.id,
