@@ -11,6 +11,8 @@ const {
   getRecentlyPlayedGames,
   searchUsers,
   updateAvatar,
+  getFriends,
+  getRequests
 } = require("../controllers/userController");
 const { protect } = require("../middleware/authMiddleware");
 const { steamProtect } = require("../middleware/steamAuth");
@@ -697,6 +699,132 @@ router.put("/:id", protect, updateUser);
  *                   example: Something went wrong
  */
 router.get("/search", protect, searchUsers); 
+
+/**
+ * @swagger
+ * /api/users/friends:
+ *   get:
+ *     summary: Get list of friends
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           example: 10
+ *         description: Number of friends per page
+ *     responses:
+ *       200:
+ *         description: Friend list has been successfully retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 friends:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       username:
+ *                         type: string
+ *                         example: johndoe
+ *                       avatar_url:
+ *                         type: string
+ *                         example: https://example.com/avatar.jpg
+ *                 total:
+ *                   type: integer
+ *                   example: 20
+ *                   description: Total number of friends
+ *                 page:
+ *                   type: integer
+ *                   example: 1
+ *                 totalPages:
+ *                   type: integer
+ *                   example: 2
+ *       401:
+ *         description: Unauthorized user
+ *       500:
+ *         description: Server error
+ */
+router.get("/friends", protect, getFriends);
+
+/**
+ * @swagger
+ * /api/users/requests:
+ *   get:
+ *     summary: Get incoming friend requests
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           example: 10
+ *         description: Number of friend requests per page
+ *     responses:
+ *       200:
+ *         description: List of incoming requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 requests:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 5
+ *                       sender:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             example: 2
+ *                           username:
+ *                             type: string
+ *                             example: johndoe
+ *                           avatar_url:
+ *                             type: string
+ *                             example: https://example.com/avatar.jpg
+ *                 total:
+ *                   type: integer
+ *                   example: 15
+ *                   description: Total number of incoming friend requests
+ *                 page:
+ *                   type: integer
+ *                   example: 1
+ *                 totalPages:
+ *                   type: integer
+ *                   example: 2
+ *       401:
+ *         description: Unauthorized user
+ *       500:
+ *         description: Server error
+ */
+router.get("/requests", protect, getRequests);
 
 module.exports = router;
 
