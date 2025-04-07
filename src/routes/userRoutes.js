@@ -8,7 +8,6 @@ const {
   updateUser,
   steamLogin,
   steamRedirect,
-  getRecentlyPlayedGames,
   searchUsers,
   updateAvatar,
 } = require("../controllers/userController");
@@ -331,28 +330,32 @@ router.get("/me", protect, getLoggedInUser);
  * @swagger
  * /api/users/steam:
  *   get:
- *     summary: Initiate Steam login
- *     description: Redirects the user to the Steam login page for authentication. After successful login, the user will be redirected back to the application with the authentication result.
+ *     summary: Authenticate with Steam
+ *     description: Logs in with Steam. If the user is already authenticated with a token, Steam will be linked to their account.
  *     tags: [Users]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         schema:
+ *           type: string
+ *           example: Bearer your_token_here
+ *         required: false
+ *         description: Optional Bearer token for authentication.
  *     responses:
- *       302:
- *         description: Redirects the user to the Steam login page.
- *         headers:
- *           Location:
- *             description: The URL of the Steam login page.
- *             schema:
- *               type: string
- *               example: https://steamcommunity.com/openid/login
- *       500:
- *         description: Internal server error.
+ *       200:
+ *         description: Successfully authenticated with Steam.
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 error:
+ *                 message:
  *                   type: string
- *                   example: Failed to initiate Steam login.
+ *                   example: "Steam authentication successful."
+ *       401:
+ *         description: Unauthorized. Token is invalid.
+ *       500:
+ *         description: Internal server error.
  */
 router.get("/steam", steamLogin);
 
@@ -394,95 +397,6 @@ router.get("/steam", steamLogin);
  *                   example: Failed to process Steam authentication.
  */
 router.get('/steam/authenticate', steamRedirect);
-
-/**
- * @swagger
- * /api/users/game-history:
- *   post:
- *     summary: Retrieve and save user's recently played games
- *     description: Fetches the recently played games for a user based on their Steam ID, filters the games based on allowed criteria, and saves them in the database. Requires a valid Steam API key.
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []  # Bearer token for authorization
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - steamid
- *             properties:
- *               steamid:
- *                 type: string
- *                 description: The user's unique Steam ID.
- *                 example: 76561198000030928
- *     responses:
- *       200:
- *         description: Filtered games retrieved and saved successfully.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Filtered games saved successfully
- *                 games:
- *                   type: array
- *                   description: List of filtered recently played games.
- *                   items:
- *                     type: object
- *                     properties:
- *                       appid:
- *                         type: integer
- *                         description: The game's unique ID on Steam.
- *                         example: 730
- *                       name:
- *                         type: string
- *                         description: The game's name.
- *                         example: "Counter-Strike: Global Offensive"
- *                       playtime_2weeks:
- *                         type: integer
- *                         description: Playtime in the last two weeks (in minutes).
- *                         example: 300
- *                       playtime_forever:
- *                         type: integer
- *                         description: Total playtime for the game (in minutes).
- *                         example: 5000
- *                       img_icon_url:
- *                         type: string
- *                         description: URL of the game's icon.
- *                         example: https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/730/icon.jpg
- *                       img_logo_url:
- *                         type: string
- *                         description: URL of the game's logo.
- *                         example: https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/730/logo.jpg
- *       404:
- *         description: No recently played games or user not found.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: No recently played games found
- *       500:
- *         description: Failed to fetch games due to a server error.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Failed to fetch games
- *                 error:
- *                   type: string
- *                   example: Internal server error details.
- */
-router.post('/game-history', steamProtect, getRecentlyPlayedGames);
 
 /**
  * @swagger
