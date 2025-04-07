@@ -356,7 +356,7 @@ const searchUsers = asyncHandler(async (req, res) => {
 
     const users = await User.findAndCountAll({
       where,
-      attributes: ["id", "username", "email", "status"],
+      attributes: ["id", "username", "avatar_url", "status"],
       limit: limitNum,
       offset,
     });
