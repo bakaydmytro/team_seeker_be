@@ -330,7 +330,7 @@ const steamRedirect = asyncHandler(async (req, res) => {
 
 const searchUsers = asyncHandler(async (req, res) => {
   try {
-    const { query = "", page = 1, limit = 10 } = req.query;
+    const { query = "", page = 1, limit = 10, appid } = req.query;
     const loggedInUserId = req.user.id;
 
     if (typeof query !== "string" || query.length > 100) {
@@ -354,28 +354,56 @@ const searchUsers = asyncHandler(async (req, res) => {
       where.username = { [Op.like]: `${query}%` };
     }
 
+    const include = [];
+
+    if (appid) {
+      include.push({
+        model: Game,
+        as: "Games", 
+        where: { appid },
+        attributes: ["appid", "playtime_forever", "playtime_2weeks", "last_played"],
+        required: true,
+      });
+    }
+
     const users = await User.findAndCountAll({
       where,
-      attributes: ["id", "username", "avatar_url", "status"],
+      include,
+      attributes: ["id", "username", "status", "avatar_url"],
       limit: limitNum,
       offset,
+      distinct: true,
     });
 
     if (users.rows.length === 0) {
       return res.status(404).json({ message: "No users found." });
     }
 
+    const formatted = users.rows.map(user => {
+      const gameInfo = user.Games?.[0];
+      return {
+        id: user.id,
+        username: user.username,
+        status: user.status,
+        avatar_url: user.avatar_url,
+        playtime_forever: gameInfo?.playtime_forever || null,
+        last_played: gameInfo?.last_played || null,
+        playtime_2weeks: gameInfo?.playtime_2weeks || null,
+      };
+    });
+
     const totalPages = Math.ceil(users.count / limitNum);
     res.status(200).json({
       metadata: {
         query,
+        appid,
         totalResults: users.count,
         totalPages,
         currentPage: pageNum,
         hasNextPage: pageNum < totalPages,
         hasPreviousPage: pageNum > 1,
       },
-      data: users.rows,
+      data: formatted,
     });
   } catch (err) {
     res.status(500).json({ error: "Something went wrong", details: err.message });
