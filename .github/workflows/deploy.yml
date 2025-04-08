@@ -1,0 +1,36 @@
+name: Deploy Backend to App Runner
+
+on:
+  push:
+    branches: [ "dev" ]
+  pull_request:
+    branches: [ "dev" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-central-1 
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to ECR
+        run: |
+          IMAGE_API_URL=639241976412.dkr.ecr.eu-north-1.amazonaws.com/team_seeker_be-api:latest
+          docker build -t $IMAGE_API_URL .
+          docker push $IMAGE_API_URL
+
+      - name: Trigger App Runner deployment
+        run: |
+          aws apprunner start-deployment --service-arn arn:aws:apprunner:eu-central-1:639241976412:service/teasmseeker-backen/a183c4a019714ea1966f4f3730d2016d
