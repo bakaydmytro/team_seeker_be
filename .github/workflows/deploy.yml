@@ -27,7 +27,7 @@ jobs:
 
       - name: Build, tag, and push image to ECR
         run: |
-          IMAGE_API_URL=639241976412.dkr.ecr.eu-north-1.amazonaws.com/team_seeker_be-api:latest
+          IMAGE_API_URL=639241976412.dkr.ecr.eu-central-1.amazonaws.com/team_seeker_be-api:latest
           docker build -t $IMAGE_API_URL .
           docker push $IMAGE_API_URL
 
