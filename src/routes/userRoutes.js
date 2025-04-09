@@ -505,18 +505,28 @@ router.put("/:id", protect, updateUser);
  * /api/users/search:
  *   get:
  *     summary: Search for users
- *     description: Searches for users by username. Requires authentication via a Bearer token. Excludes the currently logged-in user from the results.
+ *     description: >
+ *       Searches for users by username.  
+ *       Optionally filters users by Steam game `appid` and includes playtime information for that game.  
+ *       Excludes the currently logged-in user from the results.
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []  # Bearer token for authorization
  *     parameters:
  *       - name: query
  *         in: query
- *         required: true
- *         description: Search term to find users by username (case-insensitive).
+ *         required: false
+ *         description: Search term to find users by username (case-insensitive, starts with).
  *         schema:
  *           type: string
  *           example: john
+ *       - name: appid
+ *         in: query
+ *         required: false
+ *         description: Steam App ID of the game to filter users by.
+ *         schema:
+ *           type: integer
+ *           example: 730
  *       - name: page
  *         in: query
  *         required: false
@@ -527,7 +537,7 @@ router.put("/:id", protect, updateUser);
  *       - name: limit
  *         in: query
  *         required: false
- *         description: Number of results per page. Defaults to 10, maximum 100.
+ *         description: Number of results per page. Defaults to 10, maximum is 100.
  *         schema:
  *           type: integer
  *           example: 10
@@ -545,6 +555,9 @@ router.put("/:id", protect, updateUser);
  *                     query:
  *                       type: string
  *                       example: john
+ *                     appid:
+ *                       type: integer
+ *                       example: 730
  *                     totalResults:
  *                       type: integer
  *                       example: 25
@@ -571,6 +584,22 @@ router.put("/:id", protect, updateUser);
  *                       username:
  *                         type: string
  *                         example: johndoe
+ *                       status:
+ *                         type: string
+ *                         example: online
+ *                       avatar_url:
+ *                         type: string
+ *                         example: https://cdn.cloudflare.steamstatic.com/avatars/user123.jpg
+ *                       playtime_forever:
+ *                         type: integer
+ *                         nullable: true
+ *                         description: Total hours played in the filtered game (if appid is provided).
+ *                         example: 120
+ *                       playtime_2weeks:
+ *                         type: integer
+ *                         nullable: true
+ *                         description: Hours played in the last 2 weeks for the filtered game (if appid is provided).
+ *                         example: 5
  *       400:
  *         description: Invalid query or pagination parameters
  *         content:
