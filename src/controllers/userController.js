@@ -347,7 +347,8 @@ const searchUsers = asyncHandler(async (req, res) => {
     const offset = (pageNum - 1) * limitNum;
 
     const where = {
-      id: { [Op.ne]: loggedInUserId }
+      id: { [Op.ne]: loggedInUserId },
+      role_id: { [Op.ne]: 1 }
     };
 
     if (query) {

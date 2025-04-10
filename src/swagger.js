@@ -6,7 +6,7 @@ const swaggerOptions = {
     openapi: "3.0.0", 
     info: {
       title: "API Documentation",
-      version: "1.2.8",
+      version: "1.2.9",
       description: "API documentation for backend developers",
     },
     servers: [
@@ -24,7 +24,9 @@ const swaggerOptions = {
       },
     },
   },
-  apis: ["./src/routes/userRoutes.js", "./src/routes/chatRoutes.js", "./src/routes/friendRoutes.js"], 
+  apis: ["./src/routes/userRoutes.js", "./src/routes/chatRoutes.js", "./src/routes/friendRoutes.js",
+         "./src/routes/adminRoutes.js",
+  ], 
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);

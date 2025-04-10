@@ -5,6 +5,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       User.hasMany(models.Message, { foreignKey: "sender_id", as: "Messages" });
       User.hasMany(models.Game, { foreignKey: "user_id", as: "Games" });
+      User.belongsTo(models.Role, { foreignKey: "role_id", as: "Roles" });
 
       User.belongsToMany(models.Chat, {
         through: {
