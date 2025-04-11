@@ -3,7 +3,7 @@ const path = require("path");
 const fs = require("fs");
 const sharp = require("sharp");
 
-const avatarDir = path.join(__dirname, "../uploads/avatars");
+const avatarDir = path.join(__dirname, "../../uploads/avatars");
 if (!fs.existsSync(avatarDir)) {
   fs.mkdirSync(avatarDir, { recursive: true });
 }
