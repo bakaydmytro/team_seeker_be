@@ -4,7 +4,7 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.sequelize.query(`
-      ALTER TABLE games
+      ALTER TABLE Games
       ADD COLUMN last_played DATETIME AFTER playtime_forever;
     `);
 
@@ -16,7 +16,6 @@ module.exports = {
         table: 'users',
         field: 'id',
       },
-      onUpdate: 'CASCADE',
       onDelete: 'CASCADE',
     });
   },
