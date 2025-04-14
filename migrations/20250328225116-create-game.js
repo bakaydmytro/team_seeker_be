@@ -21,9 +21,6 @@ module.exports = {
       playtime_forever: {
         type: Sequelize.INTEGER
       },
-      last_played: {
-        type: Sequelize.DATE,
-      },
       img_icon_url: {
         type: Sequelize.STRING
       },
@@ -33,11 +30,6 @@ module.exports = {
       user_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references: {
-          model: "users",
-          key: "id",
-        },
-        onDelete: "CASCADE",
       },
       createdAt: {
         allowNull: false,
