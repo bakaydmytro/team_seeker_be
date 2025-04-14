@@ -12,6 +12,8 @@ const { Server } = require("socket.io");
 const http = require("http");
 const { Op } = require("sequelize");
 const jwt = require("jsonwebtoken");
+const path = require("path");
+
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -35,7 +37,7 @@ app.use("/api/users", require("./src/routes/userRoutes"));
 app.use("/api/chats", require("./src/routes/chatRoutes"));
 app.use("/api/friends", require("./src/routes/friendRoutes"));
 app.use("/api/admins", require("./src/routes/adminRoutes"));
-app.use("/uploads/avatars", express.static("uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(errorHandler);
 swaggerDocs(app);
 

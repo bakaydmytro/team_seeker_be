@@ -150,7 +150,7 @@ const createOrGetChat = asyncHandler(async (req, res) => {
           {
             model: User,
             through: { attributes: [] }, 
-            attributes: ["id", "username", "avatar_url"],
+            attributes: ["id", "username", "avatar_url", "status"],
             where: {
               id: {
                 [Op.ne]: userId, 
