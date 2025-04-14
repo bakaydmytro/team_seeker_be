@@ -97,7 +97,7 @@ const getLoggedInUser = asyncHandler(async (req, res) => {
   }
 
   const user = await User.findByPk(req.user.id, {
-    attributes: { exclude: ["password", "id"] },
+    attributes: { exclude: ["password"] },
   });
 
   if (!user) {
@@ -450,8 +450,8 @@ const getFriends = asyncHandler(async (req, res) => {
         ]
       },
       include: [
-        { model: User, as: 'requester', attributes: ['id', 'username', 'avatar_url'] },
-        { model: User, as: 'addressee', attributes: ['id', 'username', 'avatar_url'] },
+        { model: User, as: 'requester', attributes: ['id', 'username', 'avatar_url', 'status'] },
+        { model: User, as: 'addressee', attributes: ['id', 'username', 'avatar_url', 'status'] },
       ],
       limit,
       offset,
@@ -484,7 +484,7 @@ const getRequests = asyncHandler(async (req, res) => {
   try {
     const { count, rows: incomingRequests } = await Friendship.findAndCountAll({
       where: { addressee_id: req.user.id, status: 'pending' },
-      include: [{ model: User, as: 'requester', attributes: ['id', 'username', 'avatar_url'] }],
+      include: [{ model: User, as: 'requester', attributes: ['id', 'username', 'avatar_url', 'status'] }],
       limit,
       offset,
     });
