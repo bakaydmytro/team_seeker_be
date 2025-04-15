@@ -240,7 +240,7 @@ sequelize
     server.listen(port, () => {
       console.log(`Server started on port ${port}`);
       console.log(
-        `Swagger UI is available at http://localhost:${port}/api-docs`
+        `Swagger UI is available at ${process.env.BACK_URL}/api-docs`
       );
     });
   })

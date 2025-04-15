@@ -6,12 +6,12 @@ const swaggerOptions = {
     openapi: "3.0.0", 
     info: {
       title: "API Documentation",
-      version: "1.2.9",
+      version: "1.3.0",
       description: "API documentation for backend developers",
     },
     servers: [
       {
-        url: "http://localhost:5000", 
+        url: `${process.env.BACK_URL}`, 
       },
     ],
     components: {
