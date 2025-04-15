@@ -8,8 +8,8 @@ const { Op } = require("sequelize");
 const escapeWildcards = (input) => input.replace(/[%_]/g, "\\$&");
 
 const steam = new SteamAuth({
-  realm: `http://localhost:${process.env.PORT || 5000}`,
-  returnUrl: `http://localhost:${process.env.PORT || 5000}/api/users/steam/authenticate`,
+  realm: `${process.env.BACK_URL}`,
+  returnUrl: `${process.env.BACK_URL}/api/users/steam/authenticate`,
   apiKey: process.env.STEAM_API_KEY
 });
 
@@ -19,7 +19,7 @@ const generateToken = (id) => {
 
 const registerUser = asyncHandler(async (req, res) => {
   const { username, email, birthday, password } = req.body;
-  const avatar_url = req.file ? `http://localhost:5000${req.file.path}` : null;
+  const avatar_url = req.avatarUrl || null;
 
   if (!username || !email || !birthday || !password) {
     res.status(400);
@@ -317,7 +317,7 @@ const steamRedirect = asyncHandler(async (req, res) => {
     const token = generateToken(user.id);
     req.session.username = user.username;
 
-    const redirectUrl = `http://localhost:3000/ChooseGamePage?token=${token}`;
+    const redirectUrl = `${process.env.FRONT_URL}/ChooseGamePage?token=${token}`;
     res.redirect(redirectUrl);
 
   } catch (error) {
@@ -425,7 +425,7 @@ const updateAvatar = asyncHandler(async (req, res) => {
     throw new Error("No file uploaded");
   }
 
-  user.avatar_url = `http://localhost:5000${req.file.path}`;
+  user.avatar_url = req.avatarUrl;
 
   await user.save();
 

@@ -1,12 +1,13 @@
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const AWS = require("aws-sdk");
 const sharp = require("sharp");
+const multer = require("multer");
+const { v4: uuidv4 } = require("uuid");
 
-const avatarDir = path.join(__dirname, "../../uploads/avatars");
-if (!fs.existsSync(avatarDir)) {
-  fs.mkdirSync(avatarDir, { recursive: true });
-}
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: "eu-central-1",
+});
 
 const storage = multer.memoryStorage();
 
@@ -29,15 +30,24 @@ const processAvatar = async (req, res, next) => {
   if (!req.file) return next(); 
 
   try {
-    const uniqueFilename = `${Date.now()}-${Math.floor(Math.random() * 100000)}.jpg`;
-    const filePath = path.join(avatarDir, uniqueFilename);
 
-    await sharp(req.file.buffer)
+    const buffer = await sharp(req.file.buffer)
       .resize(300, 300) 
       .toFormat("jpeg")
-      .toFile(filePath);
+      .toBuffer();
 
-    req.file.path = `/uploads/avatars/${uniqueFilename}`;
+      const filename = `${uuidv4()}.jpg`;
+
+      const uploadResult = await s3
+      .upload({
+        Bucket: "teamseeker-avatars",
+        Key: `avatars/${filename}`,
+        Body: buffer,
+        ContentType: "image/jpeg",
+      })
+      .promise();
+
+    req.avatarUrl = uploadResult.Location;
 
     next(); 
   } catch (error) {
