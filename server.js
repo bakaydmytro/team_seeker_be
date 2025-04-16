@@ -1,5 +1,6 @@
 const express = require("express");
 const app = express();
+// const port = process.env.API_PORT || 5001;
 const port = process.env.API_PORT || 5000;
 const { errorHandler } = require("./src/middleware/errorMiddleware");
 const { sequelize, User, Chat, Message } = require("./models");
@@ -162,9 +163,10 @@ io.on("connection", async (socket) => {
 
     io.to(`chat_${chat_id}`).emit("newMessage", {
       id: message.id,
-      senderId: message.sender_id,
+      sender_id: message.sender_id,
       content: message.content,
       createdAt: message.createdAt,
+      chat_id: Number(message.chat_id)
     });
   });
 
