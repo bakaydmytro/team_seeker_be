@@ -11,7 +11,8 @@ const {
   searchUsers,
   updateAvatar,
   getFriends,
-  getRequests
+  getRequests,
+  getAvailableGames
 } = require("../controllers/userController");
 const { protect } = require("../middleware/authMiddleware");
 const { steamProtect } = require("../middleware/steamAuth");
@@ -768,6 +769,44 @@ router.get("/friends", protect, getFriends);
  *         description: Server error
  */
 router.get("/requests", protect, getRequests);
+
+/**
+ * @swagger
+ * /api/users/games/available:
+ *   get:
+ *     summary: Get list of available games from steam
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: [] 
+ *     description: Returning all available games in app
+ *     responses:
+ *       200:
+ *         description: List of available games
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   appid:
+ *                     type: integer
+ *                     example: 730
+ *                   name:
+ *                     type: string
+ *                     example: Counter-Strike Global Offensive
+ *       500:
+ *         description: Error while getting appid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Failed to fetch game list
+ */
+router.get("/games/available", protect, getAvailableGames);
 
 module.exports = router;
 

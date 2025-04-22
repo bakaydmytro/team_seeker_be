@@ -6,8 +6,8 @@ const swaggerOptions = {
     openapi: "3.0.0", 
     info: {
       title: "API Documentation",
-      version: "1.3.0",
-      description: "API documentation for backend developers",
+      version: "1.3.1",
+      description: "API documentation for backend and frontend developers",
     },
     servers: [
       {
