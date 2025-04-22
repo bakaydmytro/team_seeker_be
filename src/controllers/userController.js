@@ -4,8 +4,9 @@ const asyncHandler = require("express-async-handler");
 const axios = require("axios");
 const { Game, User, Friendship } = require("../../models");
 const SteamAuth = require("node-steam-openid");
-const { Op } = require("sequelize");
-const escapeWildcards = (input) => input.replace(/[%_]/g, "\\$&");
+const { Op, Sequelize } = require("sequelize");
+const allowedGames = [730, 570, 440, 252490]; // CS2, Dota 2, Team Fortress 2, Rust
+
 
 const steam = new SteamAuth({
   realm: `${process.env.BACK_URL}`,
@@ -195,8 +196,6 @@ const steamLogin = asyncHandler(async (req, res) => {
   }
 });
 
-const allowedGames = [730, 570, 440]; // CS2, Dota 2, Team Fortress 2
-
 const steamRedirect = asyncHandler(async (req, res) => {
   try {
     const steamUser = await steam.authenticate(req);
@@ -363,7 +362,7 @@ const searchUsers = asyncHandler(async (req, res) => {
         as: "Games", 
         where: { appid },
         attributes: ["appid", "playtime_forever", "playtime_2weeks", "last_played"],
-        required: true,
+        required: false,
       });
     }
 
@@ -505,6 +504,31 @@ const getRequests = asyncHandler(async (req, res) => {
   }
 });
 
+const getAvailableGames = asyncHandler(async (req, res) => {
+  try {
+    const games = await Game.findAll({
+      where: {
+        appid: { [Op.in]: allowedGames }, 
+      },
+      attributes: [
+        [Sequelize.fn("DISTINCT", Sequelize.col("appid")), "appid"],  
+        "name"
+      ],
+      order: [["name", "ASC"]],
+    });
+
+    const simplified = games.map(game => ({
+      appid: game.appid,
+      name: game.name,
+    }));
+
+    res.status(200).json(simplified);
+  } catch (error) {
+    console.error("Error getting appid list:", error);
+    res.status(500).json({ message: "Failed to fetch game list" });
+  }
+});
+
 module.exports = {
   registerUser,
   loginUser,
@@ -515,5 +539,6 @@ module.exports = {
   searchUsers,
   updateAvatar,
   getFriends,
-  getRequests
+  getRequests,
+  getAvailableGames
 };
