@@ -5,6 +5,7 @@ const {
   registerUser,
   loginUser,
   getLoggedInUser,
+  getUserById,
   updateUser,
   steamLogin,
   steamRedirect,
@@ -15,7 +16,6 @@ const {
   getAvailableGames
 } = require("../controllers/userController");
 const { protect } = require("../middleware/authMiddleware");
-const { steamProtect } = require("../middleware/steamAuth");
 const {upload, processAvatar} = require("../middleware/uploadMiddleware");
 
 /**
@@ -328,6 +328,60 @@ router.post("/login", loginUser);
  *                   example: Internal server error.
  */
 router.get("/me", protect, getLoggedInUser);
+
+/**
+ * @swagger
+ * /api/users/profile/{id}:
+ *   get:
+ *     summary: Get user profile with game list
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth:
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *           example: 3
+ *         required: true
+ *         description: ID of the user to retrieve
+ *     responses:
+ *       200:
+ *         description: User profile and games
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 username:
+ *                   type: string
+ *                 avatar_url:
+ *                   type: string
+ *                 status:
+ *                   type: string
+ *                 bio:
+ *                   type: string
+ *                 games:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       appid:
+ *                         type: integer
+ *                       name:
+ *                         type: string
+ *                       playtime_forever:
+ *                         type: integer
+ *                       last_played:
+ *                         type: integer
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+router.get("/profile/:id", protect,  getUserById);
 
 /**
  * @swagger
