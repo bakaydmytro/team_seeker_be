@@ -1,5 +1,5 @@
 const asyncHandler = require("express-async-handler");
-const { User } = require('../../models');
+const { User, Game } = require('../../models');
 const fs = require("fs");
 const path = require("path");
 
@@ -25,13 +25,37 @@ const path = require("path");
 
   const getUsers = asyncHandler(async (req, res) => {
     try {
-        const users = await User.findAll();
-        const usersJson = users.map((user) => user.toJSON());
-        res.json(usersJson);
-      } catch (error) {
-        console.error(error);
-        res.status(500).send("Unable to get users");
-      }
+      const users = await User.findAll({
+        attributes: ["id", "username", "avatar_url", "status"],
+        include: [
+          {
+            model: Game,
+            as: "Games",
+            attributes: ["appid", "name", "playtime_forever", "last_played"],
+          },
+        ],
+      });
+  
+      const usersJson = users.map(user => {
+        return {
+          id: user.id,
+          username: user.username,
+          avatar_url: user.avatar_url,
+          status: user.status,
+          games: user.Games.map(game => ({
+            appid: game.appid,
+            name: game.name,
+            playtime_forever: game.playtime_forever,
+            last_played: game.last_played,
+          })),
+        };
+      });
+  
+      res.status(200).json(usersJson);
+    } catch (error) {
+      console.error("Unable to get users with games:", error);
+      res.status(500).send("Unable to get users");
+    }
   });
 
 module.exports = {
