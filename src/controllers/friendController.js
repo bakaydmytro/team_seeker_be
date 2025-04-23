@@ -46,7 +46,7 @@ const acceptRequest = asyncHandler(async (req, res) => {
 
 const rejectRequest = asyncHandler(async (req, res) => {
 
-  const { requester_id } = req.body;
+  const requester_id = req.query.requester_id;
   const addressee_id = req.user.id;
 
   try {
