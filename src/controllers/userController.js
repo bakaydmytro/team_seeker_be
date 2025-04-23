@@ -119,6 +119,50 @@ const getLoggedInUser = asyncHandler(async (req, res) => {
   res.status(200).json(userWithGames);
 });
 
+const getUserById = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    const user = await User.findOne({
+      where: { id: userId },
+      attributes: ["id", "username", "avatar_url", "status"],
+      include: [
+        {
+          model: Game,
+          as: "Games",
+          attributes: ["appid", "name", "playtime_forever", "last_played"],
+        },
+      ],
+    });
+
+    if (req.user.id == userId){
+      return res.status(400).json({ message: "You cannot see your profile. Use users/me instead." });
+    }
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const userData = {
+      id: user.id,
+      username: user.username,
+      avatar_url: user.avatar_url,
+      status: user.status,
+      games: user.Games.map(game => ({
+        appid: game.appid,
+        name: game.name,
+        playtime_forever: game.playtime_forever,
+        last_played: game.last_played,
+      })),
+    };
+
+    res.status(200).json(userData);
+  } catch (error) {
+    console.error("Unable to get user by ID:", error);
+    res.status(500).send("Unable to get user");
+  }
+});
+
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -533,6 +577,7 @@ module.exports = {
   registerUser,
   loginUser,
   getLoggedInUser,
+  getUserById,
   updateUser,
   steamLogin,
   steamRedirect,
